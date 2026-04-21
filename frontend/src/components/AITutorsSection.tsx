@@ -91,22 +91,22 @@ const AITutorsSection = () => {
   };
 
   return (
-    <section className="py-20 bg-background" id="our-services">
-      <div className="container mx-auto px-6">
-        <div className="glass-card rounded-3xl p-8 md:p-12">
+    <section className="py-12 md:py-20 bg-background" id="our-services">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="glass-card rounded-3xl p-5 md:p-12">
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-10">
+            <h2 className="font-display text-2xl md:text-4xl font-bold text-foreground">
               AI Tutors
             </h2>
 
-            <div className="flex items-center gap-4">
-              <div className="flex bg-muted rounded-full p-1 relative">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+              <div className="flex bg-muted rounded-full p-1 relative overflow-x-auto no-scrollbar">
                 {tabs.map((tab) => (
                   <button
                     key={tab}
                     onClick={() => handleTabClick(tab)}
-                    className={`relative px-5 py-2 rounded-full text-sm font-medium transition-colors z-10 ${activeTab === tab
+                    className={`relative px-3 sm:px-5 py-2 rounded-full text-[10px] sm:text-sm font-medium transition-colors z-10 whitespace-nowrap ${activeTab === tab
                       ? "text-foreground"
                       : "text-muted-foreground hover:text-foreground"
                       }`}
@@ -123,7 +123,7 @@ const AITutorsSection = () => {
                 ))}
               </div>
 
-              <Link to="/ai-tutors" className="hidden md:flex items-center gap-1.5 px-5 py-2 rounded-full border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors">
+              <Link to="/ai-tutors" className="flex items-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-full border border-border text-[10px] sm:text-sm font-medium text-foreground hover:bg-muted transition-colors whitespace-nowrap ml-auto sm:ml-0">
                 View All <ArrowUpRight size={14} />
               </Link>
             </div>

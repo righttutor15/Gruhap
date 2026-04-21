@@ -20,44 +20,49 @@ const avatars = [
 
 const CommunitySection = () => {
   return (
-    <section className="py-20 hero-gradient relative overflow-hidden" id="community">
-      <div className="container mx-auto px-6">
-        <div className="glass-card rounded-3xl relative min-h-[500px] flex items-center justify-center overflow-hidden">
+    <section className="py-12 md:py-20 hero-gradient relative overflow-hidden" id="community">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="glass-card rounded-3xl relative min-h-[450px] md:min-h-[500px] flex items-center justify-center overflow-hidden">
           {/* Floating Avatars */}
-          {avatars.map((avatar, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.5 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08, duration: 0.4 }}
-              className="absolute floating-animation"
-              style={{
-                top: avatar.top,
-                left: avatar.left,
-                right: avatar.right,
-                animationDelay: `${i * 0.6}s`,
-              }}
-            >
-              <img
-                src={avatar.img}
-                alt=""
-                className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover ring-3 ring-card shadow-lg"
-              />
-            </motion.div>
-          ))}
+          {avatars.map((avatar, i) => {
+            // Only show indices 0, 4, 5, 7, 9 on mobile for "4-5 dispersed icons"
+            const showOnMobile = [0, 4, 5, 7, 9].includes(i);
+            
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08, duration: 0.4 }}
+                className={`absolute floating-animation ${showOnMobile ? 'block' : 'hidden md:block'}`}
+                style={{
+                  top: avatar.top,
+                  left: avatar.left,
+                  right: avatar.right,
+                  animationDelay: `${i * 0.6}s`,
+                }}
+              >
+                <img
+                  src={avatar.img}
+                  alt=""
+                  className="w-12 h-12 md:w-16 md:h-16 rounded-full object-cover ring-3 ring-card shadow-lg"
+                />
+              </motion.div>
+            );
+          })}
 
           {/* Center Content */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center z-10 py-20"
+            className="text-center z-10 py-16 md:py-20"
           >
-            <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground mb-4">
               Join The Movement
             </h2>
-            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+            <p className="text-muted-foreground mb-8 max-w-md mx-auto px-4">
               Connect, share, and grow with Student Exclusive Community.
             </p>
             <Link

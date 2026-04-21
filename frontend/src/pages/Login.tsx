@@ -306,15 +306,16 @@ const Login = () => {
                                     <h2 className="login-pop-heading">Login with Email</h2>
                                     <p className="login-pop-subheading">Enter your email to receive an OTP</p>
                                     <form className="login-pop-form" onSubmit={handleEmailSubmit}>
-                                        <input
-                                            type="email"
-                                            className="phone-input"
-                                            placeholder="Email Address"
-                                            style={{ marginBottom: '1.5rem' }}
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            required
-                                        />
+                                        <div className="phone-input-container">
+                                            <input
+                                                type="email"
+                                                className="phone-input"
+                                                placeholder="Email Address"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                required
+                                            />
+                                        </div>
                                         <button type="submit" className="continue-btn" disabled={isLoading}>
                                             {isLoading ? 'Processing...' : 'Continue'}
                                         </button>

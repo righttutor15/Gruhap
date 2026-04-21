@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ArrowUp, ChevronDown, Sparkles, Zap, BookOpen } from "lucide-react";
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const floatingBubbles = [
   { text: "Let's master calculus concepts today", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&crop=faces", side: "left" as const, top: "18%", x: "6%" },
@@ -47,10 +48,24 @@ const FloatingParticle = ({ delay, x, y }: { delay: number; x: string; y: string
 );
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
   const [typingIndex, setTypingIndex] = useState(0);
   const [displayText, setDisplayText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [hoveredSubject, setHoveredSubject] = useState<number | null>(null);
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate("/dashboard", { state: { query: searchQuery.trim() } });
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -183,26 +198,13 @@ const HeroSection = () => {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 sm:px-6 flex flex-col items-center justify-center min-h-[65vh] sm:min-h-[70vh] relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 flex flex-col items-center justify-center min-h-[60vh] sm:min-h-[70vh] relative z-10">
         {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: 20, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.5 }}
         >
-          {/* <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card/80 backdrop-blur-sm mb-8">
-            <motion.div
-              animate={{ rotate: [0, 15, -15, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-            >
-              <Sparkles size={14} className="text-cta" />
-            </motion.div>
-            {/* <span className="text-xs font-semibold text-muted-foreground tracking-wide uppercase">
-              AI-Powered Learning Platform
-            </span>
-            <Zap size={14} className="text-cta" /> }
-          </div>
-          */}
         </motion.div>
 
         {/* Title */}
@@ -210,15 +212,15 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.15 }}
-          className="text-center max-w-3xl mt-10 "
+          className="text-center max-w-3xl mt-6 sm:mt-10"
         >
-          <h1 className="font-display text-4xl sm:text-5xl md:text-7xl font-bold mb-5 leading-[1.1] tracking-tight">
+          <h1 className="font-display text-3xl sm:text-5xl md:text-7xl font-bold mb-4 md:mb-5 leading-[1.1] tracking-tight">
             <span className="text-gradient">Your Trusted</span>
             <br />
             <span className="relative inline-block">
               <span className="text-gradient">Buddy</span>
               <motion.svg
-                className="absolute -bottom-2 left-0 w-full"
+                className="absolute -bottom-1 sm:-bottom-2 left-0 w-full"
                 viewBox="0 0 200 12"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
@@ -241,7 +243,7 @@ const HeroSection = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 0.6 }}
-            className="text-lg md:text-xl text-muted-foreground mb-10 max-w-lg mx-auto"
+            className="text-sm sm:text-lg md:text-xl text-muted-foreground mb-6 md:mb-10 max-w-lg mx-auto px-4"
           >
             Get Instant Guidance with AI Professionals.
           </motion.p>
@@ -252,22 +254,34 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
-          className="w-full max-w-xl relative z-50"
+          className="w-full max-w-xl relative z-50 px-2 sm:px-0"
         >
           <motion.div
             whileHover={{ boxShadow: "0 12px 40px -8px hsl(228 80% 50% / 0.15)" }}
-            className="glass-card-elevated rounded-2xl p-5 transition-shadow duration-300"
+            className="glass-card-elevated rounded-2xl p-4 sm:p-5 transition-shadow duration-300"
           >
-            <div className="flex items-start gap-2 mb-3">
-              <BookOpen size={16} className="text-muted-foreground mt-0.5 flex-shrink-0" />
-              <div className="flex-1 min-h-[48px]">
-                <span className="text-sm text-foreground">Ask gruhap to </span>
-                <span className="text-sm text-muted-foreground">{displayText}</span>
-                <motion.span
-                  className="inline-block w-0.5 h-4 bg-cta ml-0.5 align-middle"
-                  animate={{ opacity: [1, 0] }}
-                  transition={{ duration: 0.6, repeat: Infinity }}
+            <div className="flex items-start gap-2 mb-3 relative">
+              <BookOpen size={16} className="text-muted-foreground mt-3 flex-shrink-0" />
+              <div className="flex-1 min-h-[44px] sm:min-h-[52px] relative flex items-center">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="w-full bg-transparent border-none outline-none text-xs sm:text-sm text-foreground placeholder:text-transparent z-10 py-2"
+                  autoFocus
                 />
+                {!searchQuery && (
+                  <div className="absolute left-0 pointer-events-none flex items-center h-full">
+                    <span className="text-xs sm:text-sm text-foreground">Ask gruhap to </span>
+                    <span className="text-xs sm:text-sm text-muted-foreground ml-1">{displayText}</span>
+                    <motion.span
+                      className="inline-block w-0.5 h-3.5 sm:h-4 bg-cta ml-0.5 align-middle"
+                      animate={{ opacity: [1, 0] }}
+                      transition={{ duration: 0.6, repeat: Infinity }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex items-center justify-between relative z-20">
@@ -276,7 +290,7 @@ const HeroSection = () => {
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
-                  className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground border border-border rounded-lg px-3 py-1.5 hover:bg-muted transition-colors"
+                  className="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-muted-foreground border border-border rounded-lg px-2 sm:px-3 py-1.5 hover:bg-muted transition-colors"
                 >
                   {selectedCategory}
                   <ChevronDown size={14} className={`transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
@@ -310,9 +324,10 @@ const HeroSection = () => {
               </div>
 
               <motion.button
+                onClick={handleSearch}
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 whileTap={{ scale: 0.9 }}
-                className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-md hover-glow"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary flex items-center justify-center shadow-md hover-glow"
               >
                 <ArrowUp size={16} className="text-primary-foreground" />
               </motion.button>
