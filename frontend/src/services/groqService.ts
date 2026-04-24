@@ -16,10 +16,8 @@ Your guidelines:
 - When solving math or physics problems, show the working.
 - For chemistry, explain mechanisms or reactions clearly.
 - For biology, use accurate terminology with easy definitions.
-- Keep answers concise but thorough. Use bullet points and numbered steps.
-- If a student asks something outside academics, politely redirect them to studies.
-- Be encouraging and supportive — like a great tutor.
-- Use markdown formatting for better readability (bold, lists, code blocks for formulas).`;
+- Use markdown formatting for better readability (bold, lists, code blocks).
+- CRITICAL: For all important mathematical formulas, chemical reactions, and step-by-step calculations, use block math syntax ($$...$$) to ensure they are highlighted in dedicated cards. Only use inline math ($...$) for small variables within a sentence.`;
 
 export async function sendMessageToGroq(
   userMessage: string,
@@ -46,7 +44,7 @@ export async function sendMessageToGroq(
         model: MODEL,
         messages,
         temperature: 0.7,
-        max_tokens: 1024,
+        max_tokens: 4096,
         top_p: 0.9,
       }),
     });
@@ -89,7 +87,7 @@ export async function generateChatTitle(firstMessage: string): Promise<string> {
         messages: [
           {
             role: "system",
-            content: "Generate a very short title (3-6 words max) for a chat that starts with the following message. Return ONLY the title, no quotes, no punctuation at the end, no explanation.",
+            content: "Analyze the user's intent and provide a professional, concise title (max 5 words) that summarizes the core topic of the conversation. If it's a simple greeting like 'hi' or 'how are you', use 'General Inquiry' or 'Greeting'. If it's academic, identify the subject and topic (e.g., 'Chemistry: Redox Reactions'). Return ONLY the plain text title, no quotes, no punctuation.",
           },
           { role: "user", content: firstMessage },
         ],

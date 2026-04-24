@@ -45,6 +45,10 @@
     --cta-orange: 24 95% 53%;
     --cta-orange-foreground: 0 0% 100%;
 
+    --brand-blue: 228 80% 50%;
+    --brand-blue-light: 228 90% 70%;
+    --brand-blue-dark: 228 80% 20%;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -216,4 +220,45 @@
   100% {
     background-position: 0% 50%;
   }
+}
+
+/* Math and Reaction Cards */
+.katex-display {
+  @apply my-6 p-6 rounded-2xl bg-muted/40 border border-border/50 shadow-sm overflow-x-auto relative !important;
+  background-image: radial-gradient(circle at top right, hsl(var(--brand-blue) / 0.03), transparent);
+  min-height: 2rem;
+}
+
+/* Hide empty math containers */
+.katex-display:empty,
+.katex-display:not(:has(.katex)) {
+  display: none !important;
+}
+
+.katex-display > .katex {
+  @apply text-lg md:text-xl block w-full text-center;
+}
+
+/* Add a subtle accent line to math cards */
+.katex-display::before {
+  content: '';
+  @apply absolute left-0 top-4 bottom-4 w-1 bg-cta rounded-full opacity-60;
+}
+
+/* Ensure inline math doesn't break layout */
+.katex {
+  @apply text-[1.05em];
+}
+
+/* Custom scrollbar for math cards */
+.katex-display::-webkit-scrollbar {
+  height: 4px;
+}
+
+.katex-display::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.katex-display::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40;
 }
