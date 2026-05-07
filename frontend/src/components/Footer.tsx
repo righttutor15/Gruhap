@@ -73,6 +73,27 @@ const Footer = () => {
               ))}
             </ul>
           </div>
+
+          {/* Quick Links — priority #4 */}
+          <div>
+            <h4 className="font-display font-bold mb-4">Quick Links</h4>
+            <ul className="space-y-3">
+              {[
+                { label: "Home", path: "/" },
+                { label: "About Us", path: "/about-us" },
+                { label: "Our Services", path: "/our-services" },
+                { label: "How It Works", path: "/how-it-works" },
+                { label: "Contact Us", path: "/contact-us" },
+              ].map((link) => (
+                <li key={link.label}>
+                  <Link to={link.path} className="text-sm opacity-60 hover:opacity-100 transition-opacity">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
         </div>
 
         <div className="border-t border-primary-foreground/10 mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-3">

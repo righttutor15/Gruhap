@@ -85,7 +85,7 @@ const HeroSection = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Category");
 
-  const categories = ["JEE", "NEET", "K12 Subjects", "Other"];
+  const categories = ["Academics", "Career Growth", "Self Growth", "Other"];
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();

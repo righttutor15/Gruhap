@@ -69,8 +69,22 @@ const TestimonialsSection = () => {
     onSelect();
     emblaApi.on("select", onSelect);
     emblaApi.on("reInit", onSelect);
-    return () => { emblaApi.off("select", onSelect); };
+
+    // 30-second autoplay
+    const intervalId = setInterval(() => {
+      if (emblaApi.canScrollNext()) {
+        emblaApi.scrollNext();
+      } else {
+        emblaApi.scrollTo(0);
+      }
+    }, 30000);
+
+    return () => {
+      emblaApi.off("select", onSelect);
+      clearInterval(intervalId);
+    };
   }, [emblaApi, onSelect]);
+
 
   return (
     <section className="py-20 bg-background relative overflow-hidden" id="testimonials">
@@ -85,7 +99,8 @@ const TestimonialsSection = () => {
       />
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-primary/10 blur-[140px] pointer-events-none" />
 
-      <div className="container mx-auto px-0 relative z-10">
+      <div className="w-full px-4 relative z-10">
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -106,7 +121,8 @@ const TestimonialsSection = () => {
         </motion.div>
         <div className="w-12 h-0.5 bg-primary mx-auto mb-14" />
 
-        <div className="relative max-w-6xl mx-auto">
+        <div className="relative w-full overflow-hidden">
+
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex touch-pan-y pt-16 pb-4">
               {testimonials.map((t, i) => {
@@ -171,11 +187,11 @@ const TestimonialsSection = () => {
                               draggable={false}
                             />
                           </div>
-                          <motion.span
+                          {/* <motion.span
                             animate={{ scale: [1, 1.25, 1], opacity: [1, 0.6, 1] }}
                             transition={{ duration: 2, repeat: Infinity }}
                             className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-cta border-2 border-background"
-                          />
+                          /> */}
                         </div>
                       </div>
                     </div>
@@ -185,21 +201,8 @@ const TestimonialsSection = () => {
             </div>
           </div>
 
-          {/* Nav arrows */}
-          <button
-            onClick={() => emblaApi?.scrollPrev()}
-            aria-label="Previous testimonial"
-            className="absolute left-0 md:-left-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full border border-border bg-card/90 backdrop-blur-sm flex items-center justify-center hover:bg-muted transition-colors shadow-md"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            onClick={() => emblaApi?.scrollNext()}
-            aria-label="Next testimonial"
-            className="absolute right-0 md:-right-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full border border-border bg-card/90 backdrop-blur-sm flex items-center justify-center hover:bg-muted transition-colors shadow-md"
-          >
-            <ChevronRight size={18} />
-          </button>
+          {/* Navigation arrows removed as requested */}
+
         </div>
 
         {/* Dots */}
@@ -209,8 +212,9 @@ const TestimonialsSection = () => {
               key={i}
               onClick={() => emblaApi?.scrollTo(i)}
               aria-label={`Go to testimonial ${i + 1}`}
-              className={`h-2 rounded-full transition-all ${i === selectedIndex ? "bg-primary w-8" : "bg-border w-2"
+              className={`h-2 rounded-full transition-all ${i === selectedIndex ? "bg-primary w-8" : "bg-foreground/20 hover:bg-foreground/40 w-2"
                 }`}
+
             />
           ))}
         </div>
