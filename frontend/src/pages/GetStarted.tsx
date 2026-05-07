@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Eye, 
-  EyeOff, 
-  ArrowRight, 
-  Plus, 
-  Search, 
-  ChevronRight, 
-  Settings, 
-  User, 
-  LogOut, 
+import {
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Plus,
+  Search,
+  ChevronRight,
+  Settings,
+  User,
+  LogOut,
   MessageSquare,
   Sparkles
 } from "lucide-react";
@@ -123,16 +123,16 @@ const GetStarted = () => {
         {/* Header Mockup */}
         <header className="main-header py-4 px-8 flex justify-end items-center sticky top-0 bg-[#f8f9fa]/80 backdrop-blur-md z-20">
           <div className="top-avatar-container relative">
-            <img 
-              src="https://img.freepik.com/premium-photo/web-developer-digital-avatar-generative-ai_934475-9048.jpg" 
+            <img
+              src="https://img.freepik.com/premium-photo/web-developer-digital-avatar-generative-ai_934475-9048.jpg"
               className="top-avatar w-10 h-10 rounded-full cursor-pointer hover:ring-2 hover:ring-cta/50 transition-all shadow-sm"
               alt="Avatar"
               onClick={() => setIsAvatarMenuOpen(!isAvatarMenuOpen)}
             />
-            
+
             <AnimatePresence>
               {isAvatarMenuOpen && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -268,7 +268,7 @@ const GetStarted = () => {
             </p>
           </motion.div>
         </div>
-        
+
         {/* Footer info text from screenshot */}
         <p className="text-[10px] text-gray-400 text-center pb-8 opacity-60">
           Gruhap can make mistakes. Please double-check important answers.

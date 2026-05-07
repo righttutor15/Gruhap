@@ -2,6 +2,8 @@ import { Search, TrendingUp, Clock, Plus, Flame } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { useTypewriter } from "@/hooks/useTypewriter";
+
 import { fadeUp, tapShrink } from "@/lib/motion";
 import { subCommunities, formatMembers } from "@/lib/communities";
 
@@ -19,6 +21,15 @@ const sortOptions = [
   { label: "Recent", icon: Clock },
 ];
 
+const typingSuggestions = [
+  "Search for NEET biology doubts...",
+  "Ask about JEE Physics problems...",
+  "Discuss UI/UX design trends...",
+  "Find study tips for final exams...",
+  "Ask about career roadmaps...",
+];
+
+
 const CommunityHeader = ({
   search,
   onSearchChange,
@@ -29,6 +40,8 @@ const CommunityHeader = ({
 }: CommunityHeaderProps) => {
   const totalMembers = subCommunities.reduce((acc, c) => acc + c.members, 0);
   const totalOnline = subCommunities.reduce((acc, c) => acc + c.activeNow, 0);
+  const displayText = useTypewriter(typingSuggestions);
+
 
   return (
     <>
@@ -79,11 +92,22 @@ const CommunityHeader = ({
           />
           <input
             type="text"
-            placeholder="Search posts..."
+            placeholder=""
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-muted text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-muted text-sm text-foreground placeholder:text-transparent focus:outline-none focus:ring-2 focus:ring-ring transition-all"
           />
+          {!search && (
+            <div className="absolute left-10 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
+              <span className="text-sm text-muted-foreground">{displayText}</span>
+              <motion.span
+                className="inline-block w-0.5 h-4 bg-cta ml-0.5"
+                animate={{ opacity: [1, 0] }}
+                transition={{ duration: 0.6, repeat: Infinity }}
+              />
+            </div>
+          )}
+
         </div>
         <div className="flex items-center gap-2">
           <div className="flex bg-muted rounded-lg p-0.5">

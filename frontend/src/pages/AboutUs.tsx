@@ -24,8 +24,16 @@ const AboutUs = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       {/* Hero */}
-      <section className="pt-28 pb-16 hero-gradient-animated">
-        <div className="container mx-auto px-6 text-center">
+      <section className="relative pt-28 pb-16 hero-gradient-animated overflow-hidden">
+        {/* Square grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.05] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(hsl(222 47% 11%) 1px, transparent 1px), linear-gradient(90deg, hsl(222 47% 11%) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
+        <div className="container mx-auto px-6 text-center relative z-10">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -45,7 +53,15 @@ const AboutUs = () => {
       </section>
 
       {/* Story */}
-      <section className="py-16 bg-background">
+      <section className="relative py-16 bg-background overflow-hidden">
+        {/* Square grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(hsl(222 47% 11%) 1px, transparent 1px), linear-gradient(90deg, hsl(222 47% 11%) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
         <div className="container mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
             <motion.div
@@ -55,12 +71,12 @@ const AboutUs = () => {
             >
               <h2 className="font-display text-3xl font-bold text-foreground mb-4">Our Story</h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                Born from a simple frustration — quality education shouldn't be a privilege. In 2024, our founders, 
-                a group of IIT alumni and educators, set out to build an AI platform that adapts to each student's 
+                Born from a simple frustration — quality education shouldn't be a privilege. In 2024, our founders,
+                a group of IIT alumni and educators, set out to build an AI platform that adapts to each student's
                 unique learning pace and style.
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                Today, Gruhap serves 50,000+ students across India, helping them crack NEET, JEE, and excel in 
+                Today, Gruhap serves 50,000+ students across India, helping them crack NEET, JEE, and excel in
                 K12 subjects with AI tutors that never sleep, never judge, and always adapt.
               </p>
             </motion.div>
@@ -87,7 +103,15 @@ const AboutUs = () => {
       </section>
 
       {/* Values */}
-      <section className="py-16 hero-gradient">
+      <section className="relative py-16 hero-gradient overflow-hidden">
+        {/* Square grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.05] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(hsl(222 47% 11%) 1px, transparent 1px), linear-gradient(90deg, hsl(222 47% 11%) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
         <div className="container mx-auto px-6">
           <h2 className="font-display text-3xl font-bold text-center text-foreground mb-12">Our Values</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -103,29 +127,6 @@ const AboutUs = () => {
                 <v.icon size={24} className="text-cta mb-3" />
                 <h3 className="font-display font-bold text-foreground mb-2">{v.title}</h3>
                 <p className="text-sm text-muted-foreground">{v.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Team */}
-      <section className="py-16 bg-background">
-        <div className="container mx-auto px-6">
-          <h2 className="font-display text-3xl font-bold text-center text-foreground mb-12">Meet the Team</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-            {team.map((member, i) => (
-              <motion.div
-                key={member.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="text-center"
-              >
-                <img src={member.img} alt={member.name} className="w-24 h-24 md:w-28 md:h-28 rounded-full object-cover mx-auto mb-3 ring-2 ring-border" />
-                <h4 className="font-display font-bold text-foreground text-sm">{member.name}</h4>
-                <p className="text-xs text-muted-foreground">{member.role}</p>
               </motion.div>
             ))}
           </div>

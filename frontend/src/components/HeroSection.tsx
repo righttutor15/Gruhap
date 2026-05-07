@@ -2,32 +2,41 @@ import { useState, useEffect, useCallback } from "react";
 import { ArrowUp, ChevronDown, Sparkles, Zap, BookOpen } from "lucide-react";
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useTypewriter } from "@/hooks/useTypewriter";
+
 
 const floatingBubbles = [
-  { text: "Let's master calculus concepts today", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&crop=faces", side: "left" as const, top: "18%", x: "6%" },
-  { text: "Ready for your physics challenge", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces", side: "right" as const, top: "14%", x: "6%" },
-  { text: "Chemistry formulas made easy here", img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&h=80&fit=crop&crop=faces", side: "left" as const, top: "58%", x: "3%" },
-  { text: "Your JEE preparation starts now", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=faces", side: "right" as const, top: "60%", x: "3%" },
+  { text: "Let's redesign your portfolio in Figma", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&crop=faces", side: "left" as const, top: "18%", x: "6%" },
+  { text: "Ready to crack your next interview", img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces", side: "right" as const, top: "14%", x: "6%" },
+  { text: "Calculus concepts made simple today", img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&h=80&fit=crop&crop=faces", side: "left" as const, top: "58%", x: "3%" },
+  { text: "Practice your pitch with me anytime", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=faces", side: "right" as const, top: "60%", x: "3%" },
 ];
 
 const subjects = [
-  { name: "Physics", icon: "⚡" },
-  { name: "Chemistry", icon: "🧪" },
-  { name: "Mathematics", icon: "📐" },
-  { name: "Algebra", icon: "🔢" },
-  { name: "Calculus", icon: "📈" },
-  { name: "Trigonometry", icon: "📊" },
-  { name: "Organic Chemistry", icon: "🧬" },
-  { name: "Mechanics", icon: "⚙️" },
+  // Academics first
+  { name: "JEE / NEET", icon: "📚" },
+  { name: "K12 Math & Science", icon: "📐" },
+  { name: "Doubt Solving", icon: "💡" },
+  // Career growth
+  { name: "UI/UX Design", icon: "🎨" },
+  { name: "Digital Marketing", icon: "📣" },
+  { name: "Coding", icon: "💻" },
+  // Self growth
+  { name: "Communication", icon: "💬" },
+  { name: "Spoken English", icon: "🗣️" },
+  { name: "Personality Dev", icon: "✨" },
 ];
 
 const typingTexts = [
-  "explain the theory of relativity...",
-  "solve this quadratic equation...",
-  "break down organic chemistry reactions...",
-  "help me with calculus integration...",
-  "explain Newton's laws of motion...",
+  "generate a 30-day roadmap for UI/UX design...",
+  "solve my JEE Physics doubt on thermodynamics...",
+  "teach me Digital Marketing from scratch...",
+  "help me practice Spoken English fluently...",
+  "explain mitosis vs meiosis in simple terms...",
+  "prepare a mock interview for Product Management...",
+  "how can I improve my productivity as a student?",
 ];
+
 
 const FloatingParticle = ({ delay, x, y }: { delay: number; x: string; y: string }) => (
   <motion.div
@@ -50,10 +59,9 @@ const FloatingParticle = ({ delay, x, y }: { delay: number; x: string; y: string
 const HeroSection = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [typingIndex, setTypingIndex] = useState(0);
-  const [displayText, setDisplayText] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
+  const displayText = useTypewriter(typingTexts);
   const [hoveredSubject, setHoveredSubject] = useState<number | null>(null);
+
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -85,28 +93,8 @@ const HeroSection = () => {
     mouseY.set(e.clientY - rect.top);
   }, [mouseX, mouseY]);
 
-  // Typing animation
-  useEffect(() => {
-    const currentText = typingTexts[typingIndex];
-    const timeout = setTimeout(() => {
-      if (!isDeleting) {
-        if (displayText.length < currentText.length) {
-          setDisplayText(currentText.slice(0, displayText.length + 1));
-        } else {
-          setTimeout(() => setIsDeleting(true), 2000);
-        }
-      } else {
-        if (displayText.length > 0) {
-          setDisplayText(currentText.slice(0, displayText.length - 1));
-        } else {
-          setIsDeleting(false);
-          setTypingIndex((prev) => (prev + 1) % typingTexts.length);
-        }
-      }
-    }, isDeleting ? 30 : 60);
+  // Typing animation removed - handled by hook
 
-    return () => clearTimeout(timeout);
-  }, [displayText, isDeleting, typingIndex]);
 
   const particles = Array.from({ length: 30 }, (_, i) => ({
     delay: i * 0.5,
@@ -245,7 +233,7 @@ const HeroSection = () => {
             transition={{ delay: 0.5, duration: 0.6 }}
             className="text-sm sm:text-lg md:text-xl text-muted-foreground mb-6 md:mb-10 max-w-lg mx-auto px-4"
           >
-            Get Instant Guidance with AI Professionals.
+            Get Instant Guidance with AI Mentors.
           </motion.p>
         </motion.div>
 

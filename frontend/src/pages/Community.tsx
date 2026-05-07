@@ -193,9 +193,17 @@ const Community = () => {
   const askCategories = communities.map((c) => c.name);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Square grid overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        style={{
+          backgroundImage: "linear-gradient(hsl(222 47% 11%) 1px, transparent 1px), linear-gradient(90deg, hsl(222 47% 11%) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
       <Navbar />
-      <main className="pt-24 pb-20">
+      <main className="pt-24 pb-20 relative z-10">
         <div className="container mx-auto px-4 md:px-6">
           <CommunityHeader
             search={search}

@@ -1,4 +1,4 @@
-import { BookOpen, Atom, FlaskConical, Calculator, Microscope, Brain, Dna, Zap, Globe, PenTool, Landmark, TrendingUp, Palette, Code, type LucideIcon } from "lucide-react";
+import { BookOpen, Atom, FlaskConical, Calculator, Microscope, Brain, Dna, Zap, Globe, PenTool, Landmark, TrendingUp, Palette, Code, Layers, Megaphone, MessageSquare, Star, Terminal, type LucideIcon } from "lucide-react";
 
 export interface SubCommunity {
   id: string;
@@ -124,6 +124,57 @@ export const defaultCommunities: SubCommunity[] = [
     description: "Programming, algorithms, data structures & CS fundamentals.",
     color: "bg-violet-500/15 text-violet-600",
     activeNow: 334,
+  },
+  // Skills & Career
+  {
+    id: "ui-ux",
+    name: "UI/UX Design",
+    shortName: "g/UIUX",
+    icon: Layers,
+    members: 9200,
+    description: "Figma, design systems, user research & portfolio building.",
+    color: "bg-violet-500/15 text-violet-600",
+    activeNow: 178,
+  },
+  {
+    id: "digital-marketing",
+    name: "Digital Marketing",
+    shortName: "g/Marketing",
+    icon: Megaphone,
+    members: 7800,
+    description: "SEO, social media, paid ads, growth hacks & marketing analytics.",
+    color: "bg-orange-500/15 text-orange-600",
+    activeNow: 142,
+  },
+  {
+    id: "communication",
+    name: "Communication",
+    shortName: "g/Comm",
+    icon: MessageSquare,
+    members: 6400,
+    description: "Spoken English, presentation skills, GD/PI prep & confidence building.",
+    color: "bg-sky-500/15 text-sky-600",
+    activeNow: 119,
+  },
+  {
+    id: "personality-dev",
+    name: "Personality Dev",
+    shortName: "g/PersonalityDev",
+    icon: Star,
+    members: 5900,
+    description: "Leadership, self-growth, time management & soft skills.",
+    color: "bg-yellow-500/15 text-yellow-600",
+    activeNow: 97,
+  },
+  {
+    id: "coding",
+    name: "Coding",
+    shortName: "g/Coding",
+    icon: Terminal,
+    members: 18300,
+    description: "DSA, web dev, Python, competitive programming & projects.",
+    color: "bg-green-500/15 text-green-600",
+    activeNow: 401,
   },
   // General
   {

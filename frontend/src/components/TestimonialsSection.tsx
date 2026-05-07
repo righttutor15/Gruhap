@@ -1,51 +1,61 @@
 import { useState, useCallback, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Cpu, Bot } from "lucide-react";
 import { motion } from "framer-motion";
 import useEmblaCarousel from "embla-carousel-react";
+import mentorUiux from "@/assets/mentor-uiux.jpg";
+import mentorAcademics2 from "@/assets/mentor-academics-2.jpg";
+import mentorMarketing from "@/assets/mentor-marketing.jpg";
+import mentorSpokenEnglish from "@/assets/mentor-spoken-english.jpg";
+import mentorAcademics3 from "@/assets/mentor-academics-3.jpg";
 
 const testimonials = [
   {
-    name: "Jenny Wilson",
-    role: "NEET Aspirant",
-    img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop&crop=faces&auto=format",
-    text: "The personalized study plans helped me focus on my weak areas. I improved my JEE rank by 5000 positions in just 3 months!",
-    gradient: "from-[hsl(80,60%,85%)] to-[hsl(60,50%,88%)]"
+    name: "Ananya Iyer",
+    role: "UI/UX Learner · Bengaluru",
+    img: mentorUiux,
+    track: "AI · UI/UX Mentor",
+    text: "I went from doodling in Figma to landing my first design internship in 4 months. My AI mentor reviewed every screen I made — honest, kind, and always available.",
+    accent: "from-[hsl(280,90%,70%)] via-[hsl(228,85%,68%)] to-[hsl(190,85%,65%)]",
   },
   {
-    name: "David Carter",
-    role: "JEE Student",
-    img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces&auto=format",
-    text: "Concept clarity improved dramatically with the AI tutor. The doubt-solving feature made complex physics problems so much easier to understand.",
-    gradient: "from-[hsl(200,60%,88%)] to-[hsl(340,50%,88%)]"
+    name: "Rohan Kapoor",
+    role: "JEE Aspirant · Class 12",
+    img: mentorAcademics2,
+    track: "AI · JEE Physics Mentor",
+    text: "Doubt-solving at midnight before mocks is a game-changer. My physics rank in test series jumped by 8,000 in two months.",
+    accent: "from-[hsl(150,80%,55%)] via-[hsl(190,90%,60%)] to-[hsl(228,85%,65%)]",
   },
   {
-    name: "Emily Chen",
-    role: "NEET Topper",
-    img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=faces&auto=format",
-    text: "Previous year paper practice with detailed explanations boosted my confidence. Scored 680/720 in NEET on my first attempt!",
-    gradient: "from-[hsl(270,50%,88%)] to-[hsl(220,55%,88%)]"
+    name: "Meera Joshi",
+    role: "Marketing Intern → Manager",
+    img: mentorMarketing,
+    track: "AI · Growth Mentor",
+    text: "The Digital Marketing track gave me actual playbooks I used at work. I got promoted within six months. The AI mentor felt like a real boss who taught me kindly.",
+    accent: "from-[hsl(24,95%,60%)] via-[hsl(330,85%,65%)] to-[hsl(280,85%,65%)]",
   },
   {
-    name: "Michael Johnson",
-    role: "JEE Advanced",
-    img: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=faces&auto=format",
-    text: "The step-by-step solutions for mathematics problems were game-changing. I finally understood calculus concepts I struggled with for months.",
-    gradient: "from-[hsl(30,60%,88%)] to-[hsl(350,50%,88%)]"
+    name: "Vikram Shah",
+    role: "Spoken English · Working Pro",
+    img: mentorSpokenEnglish,
+    track: "AI · Communication Mentor",
+    text: "I was scared to speak in client calls. Daily drills and roleplay with my mentor changed that. Now I lead presentations confidently.",
+    accent: "from-[hsl(228,85%,65%)] via-[hsl(265,85%,68%)] to-[hsl(310,85%,65%)]",
   },
   {
-    name: "Sophia Martinez",
-    role: "K12 Student",
-    img: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=200&h=200&fit=crop&crop=faces&auto=format",
-    text: "Mock tests with instant analysis helped me identify patterns in my mistakes. My chemistry score jumped from 60% to 92% in NEET.",
-    gradient: "from-[hsl(160,45%,85%)] to-[hsl(200,50%,88%)]"
-  }];
-
+    name: "Sneha Reddy",
+    role: "NEET Topper · 2025 batch",
+    img: mentorAcademics3,
+    track: "AI · NEET Biology Mentor",
+    text: "Topic-wise mocks with instant analysis helped me find every weak link. My biology score jumped from 60% to 94%.",
+    accent: "from-[hsl(160,80%,55%)] via-[hsl(190,85%,60%)] to-[hsl(220,85%,65%)]",
+  },
+];
 
 const TestimonialsSection = () => {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "center",
     loop: true,
-    containScroll: false
+    containScroll: false,
   });
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -59,93 +69,154 @@ const TestimonialsSection = () => {
     onSelect();
     emblaApi.on("select", onSelect);
     emblaApi.on("reInit", onSelect);
-
-    // Auto-slide logic
-    const intervalId = setInterval(() => {
-      if (emblaApi.canScrollNext()) {
-        emblaApi.scrollNext();
-      } else {
-        emblaApi.scrollTo(0);
-      }
-    }, 5000); // Scroll every 5 seconds
-
-    return () => {
-      emblaApi.off("select", onSelect);
-      clearInterval(intervalId);
-    };
+    return () => { emblaApi.off("select", onSelect); };
   }, [emblaApi, onSelect]);
 
   return (
-    <section className="py-20 bg-background overflow-hidden" id="testimonials">
-      <div className="w-full px-0  ">
-        <motion.h2
+    <section className="py-20 bg-background relative overflow-hidden" id="testimonials">
+      {/* Ambient AI grid + glow background */}
+      <div
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(hsl(228 80% 50%) 1px, transparent 1px), linear-gradient(90deg, hsl(228 80% 50%) 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+        }}
+      />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-primary/10 blur-[140px] pointer-events-none" />
+
+      <div className="container mx-auto px-0 relative z-10">
+        {/* Header */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="font-display text-3xl md:text-4xl font-bold text-center text-foreground mb-3">
-
-          OUR TESTIMONIALS
-        </motion.h2>
+          className="text-center mb-3"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 backdrop-blur-sm mb-4">
+            <Bot size={13} className="text-primary" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
+              Stories from AI-mentored learners
+            </span>
+            <Sparkles size={13} className="text-cta" />
+          </div>
+          <h2 className="font-display text-3xl md:text-5xl font-bold text-foreground">
+            Trained by AI. <span className="text-gradient">Levelled up for life.</span>
+          </h2>
+        </motion.div>
         <div className="w-12 h-0.5 bg-primary mx-auto mb-14" />
 
-        <div className="relative w-full">
+        <div className="relative max-w-6xl mx-auto">
           <div className="overflow-hidden" ref={emblaRef}>
-            <div className="flex touch-pan-y pt-12">
-              {testimonials.map((t, i) =>
-                <div
-                  key={t.name}
-                  className="flex-shrink-0 w-[85vw] md:w-[550px] lg:w-[500px] min-w-0 px-3 md:px-4">
-
+            <div className="flex touch-pan-y pt-16 pb-4">
+              {testimonials.map((t, i) => {
+                const isActive = selectedIndex === i;
+                return (
                   <div
-                    className={`relative rounded-3xl bg-gradient-to-br ${t.gradient} p-8 pt-16 text-center transition-all duration-500 ${selectedIndex === i ?
-                      "opacity-100 scale-100" :
-                      "opacity-50 scale-95"}`
-                    }>
+                    key={t.name}
+                    className="flex-shrink-0 basis-full md:basis-[60%] lg:basis-[45%] min-w-0 px-3"
+                  >
+                    {/* Outer wrapper with overflow-visible so avatar can spill out */}
+                    <div
+                      className={`relative transition-all duration-500 ${isActive ? "opacity-100 scale-100" : "opacity-50 scale-95"
+                        }`}
+                    >
+                      {/* Holographic gradient ring (card-shaped, NOT clipping the avatar) */}
+                      <div
+                        className={`relative rounded-[28px] p-[1.5px] bg-gradient-to-br ${t.accent} ${isActive ? "shadow-[0_30px_60px_-20px_hsl(228_80%_50%/0.35)]" : ""
+                          }`}
+                      >
+                        {/* Inner card — content only, no overhanging children */}
+                        <div className="relative rounded-[26px] bg-card/95 backdrop-blur-xl px-8 pt-20 pb-8 text-center overflow-hidden">
+                          {/* Inner subtle grid */}
+                          <div
+                            className="absolute inset-0 opacity-[0.04] pointer-events-none"
+                            style={{
+                              backgroundImage:
+                                "linear-gradient(hsl(228 80% 50%) 1px, transparent 1px), linear-gradient(90deg, hsl(228 80% 50%) 1px, transparent 1px)",
+                              backgroundSize: "24px 24px",
+                            }}
+                          />
 
-                    {/* Avatar */}
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2">
-                      <div className={`w-20 h-20 rounded-full overflow-hidden ring-4 transition-all duration-300 ${selectedIndex === i ? "ring-primary/30" : "ring-background"}`
-                      }>
-                        <img
-                          src={t.img}
-                          alt={t.name}
-                          className="w-full h-full object-cover"
-                          draggable={false} />
+                          {/* AI mentor track chip */}
+                          <div className="relative z-10 mb-4 flex justify-center">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-foreground/5 border border-border backdrop-blur-md">
+                              <Cpu size={11} className="text-primary" />
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/70">
+                                {t.track}
+                              </span>
+                            </div>
+                          </div>
 
+                          <div className="relative z-10">
+                            <h4 className="font-display font-bold text-foreground text-lg mb-1">
+                              {t.name}
+                            </h4>
+                            <p className="text-xs text-muted-foreground mb-4">{t.role}</p>
+                            <p className="text-sm text-foreground/80 leading-relaxed italic">
+                              "{t.text}"
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Avatar — positioned on the OUTER wrapper so it overflows freely */}
+                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-20">
+                        <div className={`relative p-[2px] rounded-full bg-gradient-to-br ${t.accent}`}>
+                          <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-background">
+                            <img
+                              src={t.img}
+                              alt={t.name}
+                              className="w-full h-full object-cover object-top"
+                              draggable={false}
+                            />
+                          </div>
+                          <motion.span
+                            animate={{ scale: [1, 1.25, 1], opacity: [1, 0.6, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-cta border-2 border-background"
+                          />
+                        </div>
                       </div>
                     </div>
-
-                    <h4 className="font-display font-bold text-foreground text-lg mb-1">
-                      {t.name}
-                    </h4>
-                    <p className="text-xs text-muted-foreground mb-4">{t.role}</p>
-                    <p className="text-sm text-foreground/80 leading-relaxed italic">
-                      "{t.text}"
-                    </p>
                   </div>
-                </div>
-              )}
+                );
+              })}
             </div>
           </div>
 
           {/* Nav arrows */}
-
+          <button
+            onClick={() => emblaApi?.scrollPrev()}
+            aria-label="Previous testimonial"
+            className="absolute left-0 md:-left-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full border border-border bg-card/90 backdrop-blur-sm flex items-center justify-center hover:bg-muted transition-colors shadow-md"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            onClick={() => emblaApi?.scrollNext()}
+            aria-label="Next testimonial"
+            className="absolute right-0 md:-right-5 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full border border-border bg-card/90 backdrop-blur-sm flex items-center justify-center hover:bg-muted transition-colors shadow-md"
+          >
+            <ChevronRight size={18} />
+          </button>
         </div>
 
         {/* Dots */}
         <div className="flex justify-center gap-2 mt-8">
-          {testimonials.map((_, i) =>
+          {testimonials.map((_, i) => (
             <button
               key={i}
               onClick={() => emblaApi?.scrollTo(i)}
-              className={`w-2.5 h-2.5 rounded-full transition-all ${i === selectedIndex ? "bg-foreground scale-110" : "bg-border"}`
-              } />
-
-          )}
+              aria-label={`Go to testimonial ${i + 1}`}
+              className={`h-2 rounded-full transition-all ${i === selectedIndex ? "bg-primary w-8" : "bg-border w-2"
+                }`}
+            />
+          ))}
         </div>
       </div>
-    </section>);
-
+    </section>
+  );
 };
 
 export default TestimonialsSection;

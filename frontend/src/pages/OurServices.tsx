@@ -1,31 +1,52 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { motion } from "framer-motion";
-import { Brain, BookOpen, Users, BarChart3, Clock, Shield, Zap, Target } from "lucide-react";
+import {
+  Brain,
+  Palette,
+  Megaphone,
+  MessagesSquare,
+  Code,
+  Sparkles,
+  GraduationCap,
+  Clock,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 
 const services = [
-  { icon: Brain, title: "AI-Powered Tutoring", desc: "Personalized 1-on-1 tutoring powered by advanced AI that adapts to your learning style, pace, and weak areas.", tag: "Most Popular" },
-  { icon: BookOpen, title: "NEET Preparation", desc: "Comprehensive Biology, Physics, and Chemistry preparation with topic-wise tests, previous year papers, and detailed solutions.", tag: null },
-  { icon: Target, title: "JEE Coaching", desc: "Advanced Mathematics, Physics, and Chemistry coaching with problem-solving strategies and concept-building exercises.", tag: null },
-  { icon: BarChart3, title: "Performance Analytics", desc: "Track your progress with detailed analytics, identify weak areas, and get personalized improvement roadmaps.", tag: "Smart" },
-  { icon: Users, title: "Study Groups", desc: "Join peer study groups, participate in group discussions, and learn collaboratively with students from across India.", tag: null },
-  { icon: Clock, title: "24/7 Doubt Solving", desc: "Get instant answers to your doubts any time of day. Our AI tutors are always available to help you.", tag: "Always On" },
-  { icon: Shield, title: "Mock Tests & Analysis", desc: "Full-length mock tests simulating real exam conditions with instant scoring and detailed performance analysis.", tag: null },
-  { icon: Zap, title: "Quick Revision Notes", desc: "AI-generated concise revision notes for last-minute preparation, customized to your learning history.", tag: "New" },
+  // ── Academics first ──
+  { icon: GraduationCap, title: "JEE / NEET / K12", desc: "Topic-wise tutoring, previous-year papers, mock tests & instant doubt resolution.", tag: "Most Popular", group: "Academics" },
+  { icon: Clock, title: "24/7 Doubt Solving", desc: "Stuck at midnight? Your AI mentor is awake. Ask anything, anytime, get a real answer.", tag: "Always On", group: "Academics" },
+  // ── Career growth next ──
+  { icon: Palette, title: "UI/UX Design Track", desc: "Wireframes, Figma, design systems and portfolio reviews — go from beginner to job-ready.", tag: null, group: "Career Growth" },
+  { icon: Megaphone, title: "Digital Marketing", desc: "SEO, paid ads, content & email — build full growth playbooks with hands-on practice.", tag: null, group: "Career Growth" },
+  { icon: Code, title: "Coding & Dev", desc: "Frontend, backend, DSA & projects — code reviews and structured roadmaps included.", tag: null, group: "Career Growth" },
+  // ── Self growth last ──
+  { icon: MessagesSquare, title: "Communication Skills", desc: "Public speaking, spoken English & written clarity. Daily drills with instant feedback.", tag: "Top Rated", group: "Self Growth" },
+  { icon: Sparkles, title: "Personality Development", desc: "Confidence, body language, mindset & interview presence — soft skills that actually compound.", tag: null, group: "Self Growth" },
+  { icon: Brain, title: "1-on-1 AI Mentorship", desc: "A dedicated AI mentor for every skill — chat freely, get explanations, drills, and reviews tuned to your pace.", tag: null, group: "Self Growth" },
 ];
 
 const OurServices = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <section className="pt-28 pb-16 hero-gradient-animated">
-        <div className="container mx-auto px-6 text-center">
+      <section className="relative pt-28 pb-16 hero-gradient-animated overflow-hidden">
+        {/* Square grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.05] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(hsl(222 47% 11%) 1px, transparent 1px), linear-gradient(90deg, hsl(222 47% 11%) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
+        <div className="container mx-auto px-6 text-center relative z-10">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="font-display text-4xl md:text-6xl font-bold text-foreground mb-4"
           >
-            Our <span className="text-gradient">Services</span>
+            What You Can <span className="text-gradient">Learn</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -33,12 +54,20 @@ const OurServices = () => {
             transition={{ delay: 0.1 }}
             className="text-muted-foreground text-lg max-w-2xl mx-auto"
           >
-            Everything you need to ace your exams and master your subjects.
+            From cracking JEE to landing your first design job — pick a track, meet your AI mentor, and start.
           </motion.p>
         </div>
       </section>
 
-      <section className="py-16 bg-background">
+      <section className="relative py-16 bg-background overflow-hidden">
+        {/* Square grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(hsl(222 47% 11%) 1px, transparent 1px), linear-gradient(90deg, hsl(222 47% 11%) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {services.map((s, i) => (
@@ -68,13 +97,23 @@ const OurServices = () => {
       </section>
 
       {/* CTA */}
-      <section className="py-16 hero-gradient">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="font-display text-3xl font-bold text-foreground mb-4">Ready to Start Learning?</h2>
-          <p className="text-muted-foreground mb-8 max-w-md mx-auto">Join 50,000+ students already using Gruhap to ace their exams.</p>
-          <a href="/dashboard" className="inline-flex px-8 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity">
-            Get Started Free
-          </a>
+      <section className="relative py-16 hero-gradient overflow-hidden">
+        {/* Square grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.05] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(hsl(222 47% 11%) 1px, transparent 1px), linear-gradient(90deg, hsl(222 47% 11%) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
+        <div className="container mx-auto px-6 text-center relative z-10">
+          <h2 className="font-display text-3xl font-bold text-foreground mb-4">Ready to start learning?</h2>
+          <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+            Pick a mentor, ask your first question, and learn at your own pace. It's free to start.
+          </p>
+          <Link to="/ai-tutors" className="inline-flex px-8 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity">
+            Browse AI Mentors
+          </Link>
         </div>
       </section>
       <Footer />

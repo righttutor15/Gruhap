@@ -1,53 +1,57 @@
 import { useState, useCallback, useEffect } from "react";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import useEmblaCarousel from "embla-carousel-react";
 import { Link } from "react-router-dom";
-import tutor1 from "@/assets/tutor-1.jpg";
-import tutor2 from "@/assets/tutor-2.jpg";
-import tutor3 from "@/assets/tutor-3.jpg";
-import tutor4 from "@/assets/tutor-4.jpg";
-import tutor5 from "@/assets/tutor-5.jpg";
-import tutor6 from "@/assets/tutor-6.jpg";
+import mentorUiux from "@/assets/mentor-uiux.jpg";
+import mentorMarketing from "@/assets/mentor-marketing.jpg";
+import mentorCommunication from "@/assets/mentor-communication.jpg";
+import mentorPersonality from "@/assets/mentor-personality.jpg";
+import mentorCoding from "@/assets/mentor-coding.jpg";
+import mentorBusiness from "@/assets/mentor-business.jpg";
+import mentorAcademics1 from "@/assets/mentor-academics-1.jpg";
+import mentorAcademics2 from "@/assets/mentor-academics-2.jpg";
+import mentorAcademics3 from "@/assets/mentor-academics-3.jpg";
+import mentorSpokenEnglish from "@/assets/mentor-spoken-english.jpg";
+import mentorInterview from "@/assets/mentor-interview.jpg";
+import mentorCreator from "@/assets/mentor-creator.jpg";
+import mentorDoubtSolver from "@/assets/mentor-doubt-solver.jpg";
+import mentorProduct from "@/assets/mentor-product.jpg";
+import mentorMindfulness from "@/assets/mentor-mindfulness.jpg";
+import mentorProductivity from "@/assets/mentor-productivity.jpg";
+import mentorEnglishLit from "@/assets/mentor-english-lit.jpg";
 
-const tabs = ["NEET Prep", "JEE Prep", "K12 Subjects"];
+const tabs = ["Academics", "Career Growth", "Self Growth"];
 
-const tutorData: Record<string, { name: string; img: string }[]> = {
-  "NEET Prep": [
-    { name: "Biology Mastery", img: tutor1 },
-    { name: "Physics Foundation", img: tutor2 },
-    { name: "Chemistry Concepts", img: tutor3 },
-    { name: "NEET Mock Tests", img: tutor4 },
-    { name: "Previous Year Papers", img: tutor5 },
-    { name: "Doubt Clearing", img: tutor6 },
+const tutorData: Record<string, { name: string; img: string; tagline: string }[]> = {
+  Academics: [
+    { name: "JEE / NEET Prep", img: mentorAcademics2, tagline: "PCM · PCB · Mock tests" },
+    { name: "Math Mentor", img: mentorAcademics1, tagline: "K12 · Calculus · Algebra" },
+    { name: "Science Tutor", img: mentorAcademics3, tagline: "Physics · Chem · Bio" },
+    { name: "English & Lit", img: mentorEnglishLit, tagline: "Grammar · Essays" },
+    { name: "Computer Science", img: mentorCoding, tagline: "Theory · Coding basics" },
+    { name: "Doubt Solver", img: mentorDoubtSolver, tagline: "24/7 instant answers" },
   ],
-  "JEE Prep": [
-    { name: "Mathematics Advanced", img: tutor4 },
-    { name: "Physics Problems", img: tutor2 },
-    { name: "Chemistry Reactions", img: tutor3 },
-    { name: "JEE Mock Tests", img: tutor1 },
-    { name: "Concept Building", img: tutor5 },
+  "Career Growth": [
+    { name: "UI/UX Designer", img: mentorUiux, tagline: "Figma · Design Systems" },
+    { name: "Digital Marketer", img: mentorMarketing, tagline: "SEO · Ads · Growth" },
+    { name: "Code Mentor", img: mentorCoding, tagline: "Web · Apps · DSA" },
+    { name: "Startup Coach", img: mentorBusiness, tagline: "MVPs · Pitch · Strategy" },
+    { name: "Content Creator", img: mentorCreator, tagline: "YouTube · Reels · Brand" },
+    { name: "Product Thinking", img: mentorProduct, tagline: "Research · Roadmaps" },
   ],
-  "K12 Subjects": [
-    { name: "Grade 9-10 Math", img: tutor4 },
-    { name: "Science Foundation", img: tutor5 },
-    { name: "English Grammar", img: tutor1 },
-    { name: "Social Studies", img: tutor6 },
-    { name: "Computer Science", img: tutor3 },
+  "Self Growth": [
+    { name: "Communication Coach", img: mentorCommunication, tagline: "Speak · Write · Pitch" },
+    { name: "Personality Dev", img: mentorPersonality, tagline: "Confidence · Mindset" },
+    { name: "Spoken English", img: mentorSpokenEnglish, tagline: "Fluency · Accent" },
+    { name: "Interview Coach", img: mentorInterview, tagline: "HR · Tech · Behavioural" },
+    { name: "Productivity", img: mentorProductivity, tagline: "Habits · Focus · Goals" },
+    { name: "Mindfulness Coach", img: mentorMindfulness, tagline: "Calm · Focus · Wellbeing" },
   ],
 };
 
-const allTutors = Object.entries(tutorData).flatMap(([category, tutors]) =>
-  tutors.map((t) => ({ ...t, category }))
-);
-
-const categoryIndices = tabs.reduce((acc, tab) => {
-  acc[tab] = allTutors.findIndex((t) => t.category === tab);
-  return acc;
-}, {} as Record<string, number>);
-
 const AITutorsSection = () => {
-  const [activeTab, setActiveTab] = useState("NEET Prep");
+  const [activeTab, setActiveTab] = useState("Academics");
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "start",
     containScroll: "trimSnaps",
@@ -62,13 +66,6 @@ const AITutorsSection = () => {
     if (!emblaApi) return;
     setCanScrollPrev(emblaApi.canScrollPrev());
     setCanScrollNext(emblaApi.canScrollNext());
-
-    // Update active tab based on the leading visible tutor's category
-    const index = emblaApi.selectedScrollSnap();
-    const currentTutor = allTutors[index];
-    if (currentTutor) {
-      setActiveTab(currentTutor.category);
-    }
   }, [emblaApi]);
 
   useEffect(() => {
@@ -81,61 +78,52 @@ const AITutorsSection = () => {
 
   useEffect(() => {
     if (emblaApi) emblaApi.reInit();
-  }, [emblaApi]);
-
-  const handleTabClick = (tab: string) => {
-    setActiveTab(tab);
-    if (emblaApi) {
-      emblaApi.scrollTo(categoryIndices[tab]);
-    }
-  };
+  }, [activeTab, emblaApi]);
 
   return (
-    <section className="py-12 md:py-20 bg-background" id="our-services">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="glass-card rounded-3xl p-5 md:p-12">
+    <section className="py-20 bg-background" id="our-services">
+      <div className="container mx-auto px-6">
+        <div className="glass-card rounded-3xl p-8 md:p-12">
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-10">
-            <h2 className="font-display text-2xl md:text-4xl font-bold text-foreground">
-              AI Tutors
-            </h2>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-3">
+            <div>
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
+                Meet Your AI Mentors
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                1-on-1 guidance for every goal — career, growth, or academics.
+              </p>
+            </div>
 
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-              <div className="flex bg-muted rounded-full p-1 relative overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-4">
+              <div className="flex bg-muted rounded-full p-1">
                 {tabs.map((tab) => (
                   <button
                     key={tab}
-                    onClick={() => handleTabClick(tab)}
-                    className={`relative px-3 sm:px-5 py-2 rounded-full text-[10px] sm:text-sm font-medium transition-colors z-10 whitespace-nowrap ${activeTab === tab
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${activeTab === tab
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
                       }`}
                   >
-                    {activeTab === tab && (
-                      <motion.div
-                        layoutId="activeTab"
-                        className="absolute inset-0 bg-card rounded-full shadow-sm z-[-1]"
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                      />
-                    )}
                     {tab}
                   </button>
                 ))}
               </div>
 
-              <Link to="/ai-tutors" className="flex items-center gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2 rounded-full border border-border text-[10px] sm:text-sm font-medium text-foreground hover:bg-muted transition-colors whitespace-nowrap ml-auto sm:ml-0">
+              <Link to="/ai-tutors" className="hidden md:flex items-center gap-1.5 px-5 py-2 rounded-full border border-border text-sm font-medium text-foreground hover:bg-muted transition-colors">
                 View All <ArrowUpRight size={14} />
               </Link>
             </div>
           </div>
 
           {/* Tutor Cards Carousel */}
-          <div className="relative">
+          <div className="relative mt-8">
             <div className="overflow-hidden" ref={emblaRef}>
               <div className="flex gap-4 touch-pan-y">
-                {allTutors.map((tutor, i) => (
+                {tutors.map((tutor, i) => (
                   <motion.div
-                    key={`${tutor.category}-${tutor.name}-${i}`}
+                    key={`${activeTab}-${tutor.name}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
@@ -145,6 +133,7 @@ const AITutorsSection = () => {
                       <img
                         src={tutor.img}
                         alt={tutor.name}
+                        loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         draggable={false}
                       />
@@ -152,6 +141,7 @@ const AITutorsSection = () => {
                     </div>
                     <div className="glass-card rounded-xl py-2.5 px-3 text-center">
                       <p className="text-xs font-semibold text-foreground">{tutor.name}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{tutor.tagline}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -162,6 +152,7 @@ const AITutorsSection = () => {
             {canScrollPrev && (
               <button
                 onClick={() => emblaApi?.scrollPrev()}
+                aria-label="Previous mentors"
                 className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 w-10 h-10 rounded-full border border-border bg-card/90 backdrop-blur-sm flex items-center justify-center hover:bg-muted transition-colors shadow-md"
               >
                 <ChevronLeft size={18} />
@@ -170,6 +161,7 @@ const AITutorsSection = () => {
             {canScrollNext && (
               <button
                 onClick={() => emblaApi?.scrollNext()}
+                aria-label="Next mentors"
                 className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 w-10 h-10 rounded-full border border-border bg-card/90 backdrop-blur-sm flex items-center justify-center hover:bg-muted transition-colors shadow-md"
               >
                 <ChevronRight size={18} />

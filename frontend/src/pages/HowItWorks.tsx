@@ -21,8 +21,16 @@ const HowItWorks = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <section className="pt-28 pb-16 hero-gradient-animated">
-        <div className="container mx-auto px-6 text-center">
+      <section className="relative pt-28 pb-16 hero-gradient-animated overflow-hidden">
+        {/* Square grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.05] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(hsl(222 47% 11%) 1px, transparent 1px), linear-gradient(90deg, hsl(222 47% 11%) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
+        <div className="container mx-auto px-6 text-center relative z-10">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -42,7 +50,15 @@ const HowItWorks = () => {
       </section>
 
       {/* Steps */}
-      <section className="py-16 bg-background">
+      <section className="relative py-16 bg-background overflow-hidden">
+        {/* Square grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(hsl(222 47% 11%) 1px, transparent 1px), linear-gradient(90deg, hsl(222 47% 11%) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
         <div className="container mx-auto px-6 max-w-4xl">
           <div className="space-y-8">
             {steps.map((s, i) => (
@@ -71,7 +87,15 @@ const HowItWorks = () => {
       </section>
 
       {/* FAQ */}
-      <section className="py-16 hero-gradient">
+      <section className="relative py-16 hero-gradient overflow-hidden">
+        {/* Square grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.05] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(hsl(222 47% 11%) 1px, transparent 1px), linear-gradient(90deg, hsl(222 47% 11%) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
         <div className="container mx-auto px-6 max-w-3xl">
           <h2 className="font-display text-3xl font-bold text-center text-foreground mb-12">Frequently Asked Questions</h2>
           <div className="space-y-4">

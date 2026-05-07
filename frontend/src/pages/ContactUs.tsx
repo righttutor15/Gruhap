@@ -18,8 +18,16 @@ const ContactUs = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <section className="pt-28 pb-16 hero-gradient-animated">
-        <div className="container mx-auto px-6 text-center">
+      <section className="relative pt-28 pb-16 hero-gradient-animated overflow-hidden">
+        {/* Square grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.05] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(hsl(222 47% 11%) 1px, transparent 1px), linear-gradient(90deg, hsl(222 47% 11%) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
+        <div className="container mx-auto px-6 text-center relative z-10">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -38,7 +46,15 @@ const ContactUs = () => {
         </div>
       </section>
 
-      <section className="py-16 bg-background">
+      <section className="relative py-16 bg-background overflow-hidden">
+        {/* Square grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          style={{
+            backgroundImage: "linear-gradient(hsl(222 47% 11%) 1px, transparent 1px), linear-gradient(90deg, hsl(222 47% 11%) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
         <div className="container mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
             {/* Contact Info */}
