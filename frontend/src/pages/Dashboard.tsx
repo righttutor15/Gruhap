@@ -203,11 +203,12 @@ const Dashboard = () => {
 
 
   // Homepage-aligned surface utilities
-  const surfaceCard = "premium-card";
+  const surfaceCard = "bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-border";
   const surfaceItem =
-    "bg-card/80 backdrop-blur-sm border border-border hover:border-primary/30 hover:bg-card transition-all";
+    "bg-white border border-border hover:border-primary/30 hover:bg-muted/20 transition-all";
   const iconBtn =
-    "p-2 rounded-xl bg-card/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card transition-all";
+    "p-2 rounded-xl bg-white border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all";
+
 
   return (
     <div className="dashboard-shell min-h-screen flex bg-background text-foreground relative overflow-hidden">
@@ -405,8 +406,9 @@ const Dashboard = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="relative w-full max-w-2xl flex flex-col items-center"
+            className="relative w-full max-w-2xl flex flex-col items-center pt-10 sm:pt-20 md:pt-32"
           >
+
             {chatHistory.length === 0 ? (
               <>
                 {/* Greeting */}
