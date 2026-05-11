@@ -169,23 +169,22 @@ const Dashboard = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5001/api/ai/chat", {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai/chat`, {
         method: "POST",
-
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userMsg: msg, history: chatHistory })
       });
       const data = await response.json();
-      
+
       setChatHistory(prev => {
         const updated = [...prev];
         const lastIndex = updated.length - 1;
-        updated[lastIndex] = { 
-          u: msg, 
+        updated[lastIndex] = {
+          u: msg,
           a: data.response,
           snapshot: data.snapshot,
           topic: data.topic,
-          youtube_results: data.youtube_results 
+          youtube_results: data.youtube_results
         };
         return updated;
       });
@@ -452,7 +451,7 @@ const Dashboard = () => {
                               {chat.a}
                             </ReactMarkdown>
                           </div>
-                          
+
                           {/* YouTube Results */}
                           {chat.youtube_results && chat.youtube_results.length > 0 && (
                             <div className="mt-6 space-y-3">
