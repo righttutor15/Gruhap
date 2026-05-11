@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -46,13 +46,12 @@ import { useTypewriter } from "@/hooks/useTypewriter";
 
 // import ThemeToggle from "@/components/ThemeToggle";
 
-const recentChats = [
-  "JEE Physics — Rotational Motion",
-  "Balance redox equations",
-  "Class 10 Trigonometry doubts",
-  "NEET Biology revision plan",
-  "Explain Newton's third law",
-];
+interface ChatSession {
+  id: string;
+  title: string;
+  history: any[];
+  createdAt: number;
+}
 
 const subjectChips = [
   // Academics
@@ -106,7 +105,29 @@ const Dashboard = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [allChats, setAllChats] = useState<ChatSession[]>([]);
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  
   const displayText = useTypewriter(rotatingPrompts);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Load chats from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("gruhap_chats");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setAllChats(parsed);
+      } catch (e) {
+        console.error("Failed to parse saved chats", e);
+      }
+    }
+  }, []);
+
+  // Save chats to localStorage whenever allChats changes
+  useEffect(() => {
+    localStorage.setItem("gruhap_chats", JSON.stringify(allChats));
+  }, [allChats]);
 
 
 
@@ -164,41 +185,118 @@ const Dashboard = () => {
     if (!msg.trim() || isLoading) return;
 
     const newUserMsg = { u: msg };
-    setChatHistory(prev => [...prev, newUserMsg]);
+    const updatedHistory = [...chatHistory, newUserMsg];
+    setChatHistory(updatedHistory);
     setMessage("");
     setIsLoading(true);
+
+    // If it's a new chat, create it
+    let activeId = currentChatId;
+    if (!activeId) {
+      activeId = Date.now().toString();
+      setCurrentChatId(activeId);
+      const newChat: ChatSession = {
+        id: activeId,
+        title: msg.length > 40 ? msg.substring(0, 40) + "..." : msg,
+        history: updatedHistory,
+        createdAt: Date.now()
+      };
+      setAllChats(prev => [newChat, ...prev]);
+    }
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userMsg: msg, history: chatHistory })
+        body: JSON.stringify({ userMsg: msg, history: updatedHistory })
       });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.details || errorData.error || `Server responded with ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
       const data = await response.json();
+
+      const finalAIResponse = {
+        u: msg,
+        a: data.response,
+        snapshot: data.snapshot,
+        topic: data.topic,
+        youtube_results: data.youtube_results
+      };
 
       setChatHistory(prev => {
         const updated = [...prev];
         const lastIndex = updated.length - 1;
-        updated[lastIndex] = {
-          u: msg,
-          a: data.response,
-          snapshot: data.snapshot,
-          topic: data.topic,
-          youtube_results: data.youtube_results
-        };
+        updated[lastIndex] = finalAIResponse;
         return updated;
       });
-    } catch (error) {
+
+      // Update allChats with the new message and AI response
+      setAllChats(prev => prev.map(chat => {
+        if (chat.id === activeId) {
+          const updatedChat = { ...chat, history: [...chat.history.slice(0, -1), finalAIResponse] };
+          
+          // Refine title if it's the first message and we have a topic
+          if (chat.history.length === 1 && data.topic) {
+            updatedChat.title = `Queries regarding ${data.topic}`;
+          }
+          
+          return updatedChat;
+        }
+        return chat;
+      }));
+
+    } catch (error: any) {
       console.error("Failed to send message:", error);
+      const errorMsg = error.message || "Sorry, I encountered an error. Please check if the AI server is running.";
       setChatHistory(prev => {
         const updated = [...prev];
-        updated[updated.length - 1].a = "Sorry, I encountered an error. Please check if the AI server is running.";
+        updated[updated.length - 1].a = errorMsg;
         return updated;
       });
+      
+      setAllChats(prev => prev.map(chat => {
+        if (chat.id === activeId) {
+          const last = { ...chat.history[chat.history.length - 1], a: errorMsg };
+          return { ...chat, history: [...chat.history.slice(0, -1), last] };
+        }
+        return chat;
+      }));
     } finally {
       setIsLoading(false);
     }
   };
+
+  const startNewChat = () => {
+    setChatHistory([]);
+    setCurrentChatId(null);
+    setMessage("");
+    if (isMobile) setSidebarOpen(false);
+  };
+
+  const loadChat = (chat: ChatSession) => {
+    setCurrentChatId(chat.id);
+    setChatHistory(chat.history);
+    if (isMobile) setSidebarOpen(false);
+  };
+
+  const deleteChat = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAllChats(prev => prev.filter(c => c.id !== id));
+    if (currentChatId === id) {
+      startNewChat();
+    }
+  };
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({ top: chatContainerRef.current.scrollHeight, behavior: "smooth" });
+    }
+  }, [chatHistory, isLoading]);
 
 
   // Homepage-aligned surface utilities
@@ -210,7 +308,7 @@ const Dashboard = () => {
 
 
   return (
-    <div className="dashboard-shell min-h-screen flex bg-background text-foreground relative overflow-hidden">
+    <div className="dashboard-shell h-screen flex bg-background text-foreground relative overflow-hidden">
       {/* Lively pastel mesh background */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 hero-gradient-animated" />
@@ -285,6 +383,7 @@ const Dashboard = () => {
             {/* New chat + search */}
             <div className="px-3 pt-3 space-y-2 shrink-0">
               <button
+                onClick={startNewChat}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-primary text-primary-foreground text-sm font-semibold shadow-md hover-glow hover:bg-primary/90 transition-colors"
               >
                 <Plus size={16} className="text-cta" />
@@ -299,24 +398,46 @@ const Dashboard = () => {
             </div>
 
             {/* Recent */}
-            <div className="flex-1 px-3 mt-5 overflow-y-auto scrollbar-thin min-h-0">
+            <div className="flex-1 px-3 mt-5 overflow-y-auto chat-scrollbar min-h-0">
               <div className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground px-3 mb-2">
                 Recent
               </div>
               <ul className="space-y-1">
-                {recentChats.map((c) => (
-                  <li key={c}>
-                    <button
-                      className="group w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/90 hover:text-foreground hover:bg-muted/60 transition-colors"
-                    >
-                      <span className="truncate text-left">{c}</span>
-                      <MoreHorizontal
-                        size={14}
-                        className="opacity-0 group-hover:opacity-100 text-muted-foreground shrink-0 ml-2"
-                      />
-                    </button>
-                  </li>
-                ))}
+                {allChats.length === 0 ? (
+                  <div className="px-3 py-8 text-center">
+                    <p className="text-xs text-muted-foreground">No recent chats</p>
+                  </div>
+                ) : (
+                  allChats.map((chat) => (
+                    <li key={chat.id}>
+                      <div
+                        onClick={() => loadChat(chat)}
+                        className={`group w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
+                          currentChatId === chat.id 
+                            ? "bg-muted text-foreground" 
+                            : "text-foreground/90 hover:text-foreground hover:bg-muted/60"
+                        }`}
+                      >
+                        <span className="truncate text-left flex-1 mr-2">{chat.title}</span>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button 
+                              onClick={(e) => e.stopPropagation()} 
+                              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded-md transition-all"
+                            >
+                              <MoreHorizontal size={14} className="text-muted-foreground" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40 rounded-xl">
+                            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={(e) => deleteChat(chat.id, e)}>
+                              Delete Chat
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </li>
+                  ))
+                )}
               </ul>
             </div>
 
@@ -339,7 +460,7 @@ const Dashboard = () => {
       </AnimatePresence>
 
       {/* MAIN */}
-      <div className="flex-1 flex flex-col min-h-screen relative w-full">
+      <div className="flex-1 flex flex-col h-screen relative w-full overflow-hidden">
         {/* Top bar */}
         <header className="h-16 flex items-center justify-between px-4 md:px-6 sticky top-0 z-20 bg-transparent">
           <div className="flex items-center gap-3">
@@ -391,118 +512,124 @@ const Dashboard = () => {
           </div>
         </header>
 
-        {/* Content — centered hero */}
-        <main className="relative flex-1 flex flex-col items-center px-4 sm:px-6 py-6 md:py-10 overflow-y-auto">
-
-          {/* Floating particles for AI ambience */}
+        {/* Main Layout Restructured */}
+        <main className="relative flex-1 flex flex-col h-[calc(100vh-64px)] overflow-hidden">
+          {/* Floating particles for AI ambience - absolute to main */}
           <div className="absolute inset-0 pointer-events-none">
             {particles.map((p, i) => (
               <FloatingParticle key={i} {...p} />
             ))}
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="relative w-full max-w-2xl flex flex-col items-center pt-10 sm:pt-20 md:pt-32"
+          {/* Scrollable Chat Area */}
+          <div 
+            ref={chatContainerRef}
+            className="flex-1 overflow-y-auto chat-scrollbar px-4 sm:px-6"
           >
-
-            {chatHistory.length === 0 ? (
-              <>
-                {/* Greeting */}
-                <motion.h1
-                  initial={{ opacity: 0, y: 8 }}
+            <div className="max-w-2xl mx-auto pt-10 sm:pt-20 md:pt-32 pb-10">
+              {chatHistory.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15, duration: 0.5 }}
-                  className="font-display text-3xl sm:text-5xl md:text-6xl font-bold text-center tracking-tight px-2"
+                  transition={{ duration: 0.5 }}
+                  className="flex flex-col items-center"
                 >
-                  Hey, <span className="text-gradient">{greeting}!</span>
-                </motion.h1>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                  className="mt-2 sm:mt-3 text-center text-sm sm:text-base md:text-lg text-muted-foreground px-2"
-                >
-                  Ask detailed questions for better responses
-                </motion.p>
-              </>
-            ) : (
-              <div className="w-full space-y-8 pb-32">
-                {chatHistory.map((chat, idx) => (
-                  <div key={idx} className="space-y-6">
-                    {/* User Message */}
-                    <div className="flex justify-end">
-                      <div className="max-w-[80%] px-4 py-3 rounded-2xl bg-muted text-foreground text-sm shadow-sm">
-                        {chat.u}
-                      </div>
-                    </div>
-
-                    {/* AI Response */}
-                    {chat.a ? (
-                      <div className="flex justify-start gap-4">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cta to-amber-400 flex items-center justify-center shrink-0 shadow-sm">
-                          <Sparkles size={16} className="text-white" />
+                  {/* Greeting */}
+                  <motion.h1
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15, duration: 0.5 }}
+                    className="font-display text-3xl sm:text-5xl md:text-6xl font-bold text-center tracking-tight px-2"
+                  >
+                    Hey, <span className="text-gradient">{greeting}!</span>
+                  </motion.h1>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                    className="mt-2 sm:mt-3 text-center text-sm sm:text-base md:text-lg text-muted-foreground px-2"
+                  >
+                    Ask detailed questions for better responses
+                  </motion.p>
+                </motion.div>
+              ) : (
+                <div className="w-full space-y-8">
+                  {chatHistory.map((chat, idx) => (
+                    <div key={idx} className="space-y-6">
+                      {/* User Message */}
+                      <div className="flex justify-end">
+                        <div className="max-w-[80%] px-4 py-3 rounded-2xl bg-muted text-foreground text-sm shadow-sm">
+                          {chat.u}
                         </div>
-                        <div className="flex-1 space-y-4">
-                          <div className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                              {chat.a}
-                            </ReactMarkdown>
+                      </div>
+
+                      {/* AI Response */}
+                      {chat.a ? (
+                        <div className="flex justify-start gap-4">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cta to-amber-400 flex items-center justify-center shrink-0 shadow-sm">
+                            <Sparkles size={16} className="text-white" />
                           </div>
-
-                          {/* YouTube Results */}
-                          {chat.youtube_results && chat.youtube_results.length > 0 && (
-                            <div className="mt-6 space-y-3">
-                              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                                <ImageIcon size={14} /> Recommended Resources
-                              </p>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {chat.youtube_results.map((vid: any, i: number) => (
-                                  <a
-                                    key={i}
-                                    href={vid[1]}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="block p-3 rounded-xl border border-border bg-card/50 hover:bg-card hover:border-primary/30 transition-all group"
-                                  >
-                                    <p className="text-xs font-semibold line-clamp-2 group-hover:text-primary transition-colors">
-                                      {vid[0]}
-                                    </p>
-                                    <p className="text-[10px] text-muted-foreground mt-1">Watch on YouTube</p>
-                                  </a>
-                                ))}
-                              </div>
+                          <div className="flex-1 space-y-4">
+                            <div className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {chat.a}
+                              </ReactMarkdown>
                             </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex justify-start gap-4">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cta to-amber-400 flex items-center justify-center shrink-0 animate-pulse">
-                          <Sparkles size={16} className="text-white" />
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0ms' }} />
-                          <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '150ms' }} />
-                          <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '300ms' }} />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
 
+                            {/* YouTube Results */}
+                            {chat.youtube_results && chat.youtube_results.length > 0 && (
+                              <div className="mt-6 space-y-3">
+                                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                  <ImageIcon size={14} /> Recommended Resources
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  {chat.youtube_results.map((vid: any, i: number) => (
+                                    <a
+                                      key={i}
+                                      href={vid[1]}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="block p-3 rounded-xl border border-border bg-card/50 hover:bg-card hover:border-primary/30 transition-all group"
+                                    >
+                                      <p className="text-xs font-semibold line-clamp-2 group-hover:text-primary transition-colors">
+                                        {vid[0]}
+                                      </p>
+                                      <p className="text-[10px] text-muted-foreground mt-1">Watch on YouTube</p>
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex justify-start gap-4">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cta to-amber-400 flex items-center justify-center shrink-0 animate-pulse">
+                            <Sparkles size={16} className="text-white" />
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
 
+          {/* Fixed Bottom Input Area */}
+          <div className="w-full max-w-2xl mx-auto px-4 pb-6 pt-2 shrink-0 relative z-10">
             {/* Composer pill - lively neumorphism */}
             <motion.form
               onSubmit={handleSend}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.5 }}
-              className="w-full mt-8 sm:mt-10"
+              className="w-full"
             >
               <div className={`relative rounded-3xl sm:rounded-full p-3 ${surfaceCard}`}>
                 <div className="relative">
@@ -572,7 +699,7 @@ const Dashboard = () => {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.55, duration: 0.5 }}
-              className="w-full mt-6 sm:mt-7 -mx-4 sm:mx-0 group/marquee"
+              className="w-full mt-4 group/marquee"
             >
               <div
                 className="relative overflow-hidden"
@@ -592,10 +719,9 @@ const Dashboard = () => {
                     <button
                       key={`${s.label}-${i}`}
                       onClick={() => handleSend(undefined, s.prompt)}
-
-                      className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-card/80 backdrop-blur-sm border border-border text-sm font-display font-medium tracking-tight text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card hover:-translate-y-0.5 shadow-sm transition-all"
+                      className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/80 backdrop-blur-sm border border-border text-xs font-display font-medium tracking-tight text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card hover:-translate-y-0.5 shadow-sm transition-all"
                     >
-                      <s.icon size={16} className={s.color} />
+                      <s.icon size={14} className={s.color} />
                       <span>{s.label}</span>
                     </button>
                   ))}
@@ -603,10 +729,10 @@ const Dashboard = () => {
               </div>
             </motion.div>
 
-            <p className="mt-5 sm:mt-6 text-center text-xs text-muted-foreground px-4">
+            <p className="mt-3 text-center text-[10px] text-muted-foreground px-4">
               Gruhap can make mistakes. Please double-check important answers.
             </p>
-          </motion.div>
+          </div>
         </main>
       </div>
     </div>
