@@ -139,12 +139,7 @@ const HeroSection = () => {
       </div>
 
       {/* Grid overlay */}
-      <div className="absolute inset-0 opacity-[0.05] pointer-events-none"
-        style={{
-          backgroundImage: "linear-gradient(hsl(222 47% 11%) 1px, transparent 1px), linear-gradient(90deg, hsl(222 47% 11%) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
+      <div className="absolute inset-0 grid-pattern opacity-[0.05] pointer-events-none" />
 
       {/* Floating Bubbles */}
       <div className="hidden lg:block">
@@ -249,7 +244,6 @@ const HeroSection = () => {
             className="glass-card-elevated rounded-2xl p-4 sm:p-5 transition-shadow duration-300"
           >
             <div className="flex items-start gap-2 mb-3 relative">
-              <BookOpen size={16} className="text-muted-foreground mt-3 flex-shrink-0" />
               <div className="flex-1 min-h-[44px] sm:min-h-[52px] relative flex items-center">
                 <input
                   type="text"
@@ -261,8 +255,9 @@ const HeroSection = () => {
                 />
                 {!searchQuery && (
                   <div className="absolute left-0 pointer-events-none flex items-center h-full">
-                    <span className="text-xs sm:text-sm text-foreground">Ask gruhap to </span>
-                    <span className="text-xs sm:text-sm text-muted-foreground ml-1">{displayText}</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground">
+                      Ask gruhap to {displayText}
+                    </span>
                     <motion.span
                       className="inline-block w-0.5 h-3.5 sm:h-4 bg-cta ml-0.5 align-middle"
                       animate={{ opacity: [1, 0] }}
@@ -327,7 +322,7 @@ const HeroSection = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.7, duration: 0.5 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
           className=" w-full max-w-2xl overflow-hidden py-10"
         >
           <div className="flex marquee whitespace-nowrap min-h-[80px] items-center">

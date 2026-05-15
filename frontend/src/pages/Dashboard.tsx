@@ -1,8 +1,11 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useRef, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Search,
+  Coins,
+  Wallet,
+  ShieldCheck,
   PanelLeftClose,
   PanelLeftOpen,
   ArrowUp,
@@ -33,6 +36,9 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import rehypeHighlight from 'rehype-highlight';
 
 import {
   DropdownMenu,
@@ -42,7 +48,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useTypewriter } from "@/hooks/useTypewriter";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
+import { TokenInfo, BalanceInfo, SubscriptionInfo } from "@/components/dashboard/UserStats";
 
 // import ThemeToggle from "@/components/ThemeToggle";
 
@@ -72,8 +87,8 @@ const subjectChips = [
   { label: "Improve my mindset", icon: Brain, color: "text-purple-500", prompt: "Coach me on building a growth mindset" },
 ];
 
-// Soft floating particles for AI ambience
-const FloatingParticle = ({ delay, x, y, hue }: { delay: number; x: string; y: string; hue: string }) => (
+// Soft floating particles for AI ambience - memoized to reduce lag
+const FloatingParticle = React.memo(({ delay, x, y, hue }: { delay: number; x: string; y: string; hue: string }) => (
   <motion.div
     className="absolute w-1.5 h-1.5 rounded-full"
     style={{ left: x, top: y, background: hue }}
@@ -84,7 +99,8 @@ const FloatingParticle = ({ delay, x, y, hue }: { delay: number; x: string; y: s
     }}
     transition={{ duration: 6, repeat: Infinity, delay, ease: "easeInOut" }}
   />
-);
+));
+FloatingParticle.displayName = "FloatingParticle";
 
 const rotatingPrompts = [
   "Ask me to explain photosynthesis like you're 12…",
@@ -100,6 +116,7 @@ const rotatingPrompts = [
 const Dashboard = () => {
   const location = useLocation();
 
+  const { user } = useSelector((state: RootState) => state.auth);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [message, setMessage] = useState("");
   const [isMobile, setIsMobile] = useState(false);
@@ -107,9 +124,19 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [allChats, setAllChats] = useState<ChatSession[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
-  
+
+  // Dialog states for stats
+  const [activeDialog, setActiveDialog] = useState<string | null>(null);
+
   const displayText = useTypewriter(rotatingPrompts);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  const CustomMenuIcon = () => (
+    <div className="flex flex-col gap-1.5 items-start">
+      <div className="w-5 h-0.5 bg-foreground rounded-full" />
+      <div className="w-3.5 h-0.5 bg-foreground rounded-full" />
+    </div>
+  );
 
   // Load chats from localStorage on mount
   useEffect(() => {
@@ -171,8 +198,8 @@ const Dashboard = () => {
       "hsl(330 90% 80% / 0.45)",
       "hsl(var(--cta-orange) / 0.4)",
     ];
-    return Array.from({ length: 22 }, (_, i) => ({
-      delay: i * 0.35,
+    return Array.from({ length: 12 }, (_, i) => ({
+      delay: i * 0.6,
       x: `${Math.random() * 100}%`,
       y: `${Math.random() * 100}%`,
       hue: hues[i % hues.length],
@@ -190,14 +217,14 @@ const Dashboard = () => {
     setMessage("");
     setIsLoading(true);
 
-    // If it's a new chat, create it
+    // If it's a new chat, create it with a temporary title while AI responds
     let activeId = currentChatId;
     if (!activeId) {
       activeId = Date.now().toString();
       setCurrentChatId(activeId);
       const newChat: ChatSession = {
         id: activeId,
-        title: msg.length > 40 ? msg.substring(0, 40) + "..." : msg,
+        title: "New Chat",
         history: updatedHistory,
         createdAt: Date.now()
       };
@@ -234,16 +261,14 @@ const Dashboard = () => {
         return updated;
       });
 
-      // Update allChats with the new message and AI response
+      // Update allChats with the AI response and use server-generated title if provided
       setAllChats(prev => prev.map(chat => {
         if (chat.id === activeId) {
           const updatedChat = { ...chat, history: [...chat.history.slice(0, -1), finalAIResponse] };
-          
-          // Refine title if it's the first message and we have a topic
-          if (chat.history.length === 1 && data.topic) {
-            updatedChat.title = `Queries regarding ${data.topic}`;
+          // Use the AI-generated title from the server (only on first message)
+          if (data.chatTitle) {
+            updatedChat.title = data.chatTitle;
           }
-          
           return updatedChat;
         }
         return chat;
@@ -257,7 +282,7 @@ const Dashboard = () => {
         updated[updated.length - 1].a = errorMsg;
         return updated;
       });
-      
+
       setAllChats(prev => prev.map(chat => {
         if (chat.id === activeId) {
           const last = { ...chat.history[chat.history.length - 1], a: errorMsg };
@@ -373,10 +398,10 @@ const Dashboard = () => {
               </Link>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className={iconBtn}
+                className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
                 aria-label="Collapse sidebar"
               >
-                {isMobile ? <X size={16} /> : <PanelLeftClose size={16} />}
+                {isMobile ? <X size={16} /> : <CustomMenuIcon />}
               </button>
             </div>
 
@@ -412,17 +437,16 @@ const Dashboard = () => {
                     <li key={chat.id}>
                       <div
                         onClick={() => loadChat(chat)}
-                        className={`group w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
-                          currentChatId === chat.id 
-                            ? "bg-muted text-foreground" 
-                            : "text-foreground/90 hover:text-foreground hover:bg-muted/60"
-                        }`}
+                        className={`group w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer ${currentChatId === chat.id
+                          ? "bg-muted text-foreground"
+                          : "text-foreground/90 hover:text-foreground hover:bg-muted/60"
+                          }`}
                       >
                         <span className="truncate text-left flex-1 mr-2">{chat.title}</span>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button 
-                              onClick={(e) => e.stopPropagation()} 
+                            <button
+                              onClick={(e) => e.stopPropagation()}
                               className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded-md transition-all"
                             >
                               <MoreHorizontal size={14} className="text-muted-foreground" />
@@ -446,12 +470,12 @@ const Dashboard = () => {
               <button
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl ${surfaceItem}`}
               >
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cta to-amber-400 flex items-center justify-center text-cta-foreground font-bold text-sm shadow-md">
-                  A
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cta to-amber-400 flex items-center justify-center text-cta-foreground font-bold text-sm shadow-md uppercase">
+                  {user?.displayName?.[0] || user?.email?.[0] || "U"}
                 </div>
                 <div className="flex-1 text-left min-w-0">
-                  <div className="text-sm font-semibold truncate">Anirban</div>
-                  <div className="text-[11px] font-medium text-muted-foreground truncate">Free plan</div>
+                  <div className="text-sm font-semibold truncate">{user?.displayName || user?.email?.split('@')[0] || "User"}</div>
+                  <div className="text-[11px] font-medium text-muted-foreground truncate">{user?.subscription || "Free plan"}</div>
                 </div>
               </button>
             </div>
@@ -467,10 +491,10 @@ const Dashboard = () => {
             {!sidebarOpen && (
               <button
                 onClick={() => setSidebarOpen(true)}
-                className={iconBtn}
+                className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
                 aria-label="Open sidebar"
               >
-                {isMobile ? <Menu size={16} /> : <PanelLeftOpen size={16} />}
+                {isMobile ? <Menu size={16} /> : <CustomMenuIcon />}
               </button>
             )}
             <Link to="/" className="lg:hidden flex items-center gap-2">
@@ -489,11 +513,21 @@ const Dashboard = () => {
                   className="w-10 h-10 rounded-full bg-gradient-to-br from-cta to-amber-400 flex items-center justify-center text-cta-foreground font-bold text-sm shadow-md hover-glow hover:scale-105 transition-transform"
                   aria-label="Account menu"
                 >
-                  A
+                  {user?.displayName?.[0] || user?.email?.[0] || "U"}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 rounded-2xl">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setActiveDialog("tokens")}>
+                  <Coins className="mr-2 h-4 w-4 text-amber-500" /> Tokens
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveDialog("balance")}>
+                  <Wallet className="mr-2 h-4 w-4 text-emerald-500" /> Balance
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveDialog("subscription")}>
+                  <ShieldCheck className="mr-2 h-4 w-4 text-primary" /> Plan Details
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <User className="mr-2 h-4 w-4" /> Profile
@@ -522,7 +556,7 @@ const Dashboard = () => {
           </div>
 
           {/* Scrollable Chat Area */}
-          <div 
+          <div
             ref={chatContainerRef}
             className="flex-1 overflow-y-auto chat-scrollbar px-4 sm:px-6"
           >
@@ -549,8 +583,34 @@ const Dashboard = () => {
                     transition={{ delay: 0.3, duration: 0.5 }}
                     className="mt-2 sm:mt-3 text-center text-sm sm:text-base md:text-lg text-muted-foreground px-2"
                   >
-                    Ask detailed questions for better responses
+                    What can I help with?
                   </motion.p>
+
+                  {/* Category Boxes */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.45, duration: 0.5 }}
+                    className="grid grid-cols-2 gap-3 sm:gap-4 mt-8 sm:mt-12 w-full px-2"
+                  >
+                    {[
+                      { label: "Self Growth", icon: Heart, color: "text-rose-500", bg: "bg-rose-500/5", prompt: "Help me with my personal development journey" },
+                      { label: "Academics", icon: GraduationCap, color: "text-indigo-500", bg: "bg-indigo-500/5", prompt: "I need help with my school/college studies" },
+                      { label: "Career Growth", icon: Compass, color: "text-cyan-500", bg: "bg-cyan-500/5", prompt: "Advise me on my career path and skills" },
+                      { label: "Other", icon: Sparkles, color: "text-amber-500", bg: "bg-amber-500/5", prompt: "Let's explore something new together" },
+                    ].map((box, i) => (
+                      <button
+                        key={box.label}
+                        onClick={() => handleSend(undefined, box.prompt)}
+                        className={`flex flex-col items-center justify-center p-4 sm:p-6 rounded-2xl border border-border/50 ${box.bg} hover:border-primary/20 transition-all group`}
+                      >
+                        <div className={`p-2 sm:p-3 rounded-full bg-white shadow-sm mb-3 group-hover:scale-110 transition-transform`}>
+                          <box.icon className={box.color} size={20} />
+                        </div>
+                        <span className="text-[11px] sm:text-xs font-bold text-foreground/80 uppercase tracking-wider">{box.label}</span>
+                      </button>
+                    ))}
+                  </motion.div>
                 </motion.div>
               ) : (
                 <div className="w-full space-y-8">
@@ -570,8 +630,11 @@ const Dashboard = () => {
                             <Sparkles size={16} className="text-white" />
                           </div>
                           <div className="flex-1 space-y-4">
-                            <div className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed">
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            <div className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed markdown-content">
+                              <ReactMarkdown
+                                remarkPlugins={[remarkGfm, remarkMath]}
+                                rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                              >
                                 {chat.a}
                               </ReactMarkdown>
                             </div>
@@ -623,6 +686,44 @@ const Dashboard = () => {
 
           {/* Fixed Bottom Input Area */}
           <div className="w-full max-w-2xl mx-auto px-4 pb-6 pt-2 shrink-0 relative z-10">
+
+            {/* Subject chips — Moved above input and only for new chat */}
+            {chatHistory.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.55, duration: 0.5 }}
+                className="w-full mb-4 group/marquee"
+              >
+                <div
+                  className="relative overflow-hidden"
+                  style={{
+                    maskImage:
+                      "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+                    WebkitMaskImage:
+                      "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+                  }}
+                >
+                  <motion.div
+                    className="flex gap-3 w-max py-1"
+                    animate={{ x: ["0%", "-50%"] }}
+                    transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+                  >
+                    {[...subjectChips, ...subjectChips].map((s, i) => (
+                      <button
+                        key={`${s.label}-${i}`}
+                        onClick={() => handleSend(undefined, s.prompt)}
+                        className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/80 backdrop-blur-sm border border-border text-xs font-display font-medium tracking-tight text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card hover:-translate-y-0.5 shadow-sm transition-all"
+                      >
+                        <s.icon size={14} className={s.color} />
+                        <span>{s.label}</span>
+                      </button>
+                    ))}
+                  </motion.div>
+                </div>
+              </motion.div>
+            )}
+
             {/* Composer pill - lively neumorphism */}
             <motion.form
               onSubmit={handleSend}
@@ -694,47 +795,23 @@ const Dashboard = () => {
               </div>
             </motion.form>
 
-            {/* Subject chips — auto-scrolling marquee, no scrollbar */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.55, duration: 0.5 }}
-              className="w-full mt-4 group/marquee"
-            >
-              <div
-                className="relative overflow-hidden"
-                style={{
-                  maskImage:
-                    "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
-                  WebkitMaskImage:
-                    "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
-                }}
-              >
-                <motion.div
-                  className="flex gap-3 w-max py-1"
-                  animate={{ x: ["0%", "-50%"] }}
-                  transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
-                >
-                  {[...subjectChips, ...subjectChips].map((s, i) => (
-                    <button
-                      key={`${s.label}-${i}`}
-                      onClick={() => handleSend(undefined, s.prompt)}
-                      className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/80 backdrop-blur-sm border border-border text-xs font-display font-medium tracking-tight text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card hover:-translate-y-0.5 shadow-sm transition-all"
-                    >
-                      <s.icon size={14} className={s.color} />
-                      <span>{s.label}</span>
-                    </button>
-                  ))}
-                </motion.div>
-              </div>
-            </motion.div>
-
             <p className="mt-3 text-center text-[10px] text-muted-foreground px-4">
               Gruhap can make mistakes. Please double-check important answers.
             </p>
           </div>
         </main>
       </div>
+      {/* Stats Dialogs */}
+      <Dialog open={activeDialog !== null} onOpenChange={(open) => !open && setActiveDialog(null)}>
+        <DialogContent className="sm:max-w-md rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="capitalize">{activeDialog} Information</DialogTitle>
+          </DialogHeader>
+          {activeDialog === "tokens" && <TokenInfo />}
+          {activeDialog === "balance" && <BalanceInfo />}
+          {activeDialog === "subscription" && <SubscriptionInfo />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

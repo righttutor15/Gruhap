@@ -1,5 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Space+Grotesk:wght@300..700&display=swap');
 
+@import "highlight.js/styles/github-dark.css";
+@import "katex/dist/katex.min.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -152,6 +155,12 @@
     animation: gradient-shift 8s ease infinite;
   }
 
+  .grid-pattern {
+    background-image: linear-gradient(hsl(222 47% 11%) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(222 47% 11%) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
   .hover-glow {
     transition: box-shadow 0.3s ease;
   }
@@ -180,7 +189,7 @@
   }
 
   .marquee {
-    animation: marquee 12s linear infinite;
+    animation: marquee 8s linear infinite;
   }
 
   .no-scrollbar::-webkit-scrollbar {

@@ -4,6 +4,7 @@ interface User {
     uid: string;
     email: string;
     displayName?: string;
+    subscription?: string;
 }
 
 interface AuthState {

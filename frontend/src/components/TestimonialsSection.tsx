@@ -70,14 +70,14 @@ const TestimonialsSection = () => {
     emblaApi.on("select", onSelect);
     emblaApi.on("reInit", onSelect);
 
-    // 30-second autoplay
+    // 12-second autoplay
     const intervalId = setInterval(() => {
       if (emblaApi.canScrollNext()) {
         emblaApi.scrollNext();
       } else {
         emblaApi.scrollTo(0);
       }
-    }, 30000);
+    }, 5000);
 
     return () => {
       emblaApi.off("select", onSelect);
@@ -183,6 +183,7 @@ const TestimonialsSection = () => {
                             <img
                               src={t.img}
                               alt={t.name}
+                              loading="lazy"
                               className="w-full h-full object-cover object-top"
                               draggable={false}
                             />

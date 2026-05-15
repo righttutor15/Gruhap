@@ -29,8 +29,11 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 hero-gradient-animated border-b border-border/50">
-      <div className="container mx-auto flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
+    <nav className="fixed top-0 left-0 right-0 z-50 hero-gradient-animated border-b border-border/50 overflow-hidden">
+      {/* Grid overlay */}
+      <div className="absolute inset-0 grid-pattern opacity-[0.05] pointer-events-none" />
+
+      <div className="container mx-auto flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 relative z-10">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-cta flex items-center justify-center">
@@ -118,9 +121,11 @@ const Navbar = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden hero-gradient-animated border-t border-border"
+            className="lg:hidden hero-gradient-animated border-t border-border relative overflow-hidden"
           >
-            <div className="flex flex-col px-4 sm:px-6 py-4 gap-1">
+            {/* Grid overlay */}
+            <div className="absolute inset-0 grid-pattern opacity-[0.05] pointer-events-none" />
+            <div className="flex flex-col px-4 sm:px-6 py-4 gap-1 relative z-10">
               {navLinks.map((link) => (
                 <Link
                   key={link.label}

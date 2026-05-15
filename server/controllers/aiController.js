@@ -8,7 +8,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const youtube = google.youtube({ version: 'v3', auth: process.env.YOUTUBE_API_KEY });
 
-// Global state to mimic the Python global variables (in a real app, this should be in a database)
+// Global state (in a real app, this should be in a database)
 let savedRoadmap = "No roadmap generated yet.";
 
 const parseDuration = (duration) => {
@@ -72,7 +72,7 @@ const tutorReply = async (req, res) => {
     const { userMsg, history = [] } = req.body;
 
     try {
-        // STEP 1: THE BRAIN (OpenAI GPT-4o-mini)
+        // ── STEP 1: THE BRAIN (GPT-4o-mini) ──────────────────────────────────────
         const routerInstructions = `You are the 'Brain' of the Gruhap Engine.
 Your ONLY job is to manage the curriculum state and output structured JSON. 
 
@@ -109,18 +109,13 @@ JSON SCHEMA (Strictly return valid JSON):
 
         const data = JSON.parse(oaiResp.choices[0].message.content);
 
-        // STEP 2: YOUTUBE API
-        const ytQuery = data.youtube_query;
-        if (ytQuery && ytQuery.toLowerCase() !== "null") {
-            data.youtube_results = await fetchYoutubeVideos(ytQuery);
-        } else {
-            data.youtube_results = [];
-        }
-
-        // STEP 3: THE VOICE (Claude Haiku 4.5)
+        // ── STEPS 2, 3 & 4 run in PARALLEL ───────────────────────────────────────
+        // All three depend on Step 1 but are independent of each other.
         const intent = data.intent || 'lesson_delivery';
-        let pedagogicalRules = "";
+        const ytQuery = data.youtube_query;
 
+        // Build Claude Voice system prompt
+        let pedagogicalRules = "";
         if (intent === "roadmap_generation") {
             pedagogicalRules = `
 PEDAGOGICAL RULES (CRITICAL):
@@ -159,15 +154,48 @@ ${pedagogicalRules}`;
         });
         claudeMessages.push({ role: "user", content: userMsg });
 
-        const claudeResp = await anthropic.messages.create({
-            model: "claude-3-haiku-20240307",
-            max_tokens: 1000,
-            temperature: 0.6,
-            system: voiceInstructions,
-            messages: claudeMessages
-        });
+        // Chat title generation — only on the very first message of a session
+        const isFirstMessage = history.length === 0;
+        const titlePromise = isFirstMessage
+            ? openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: [
+                    {
+                        role: "system",
+                        content: `You generate short, memorable chat titles for a student AI tutor app.
+Rules:
+- 3-5 words only, title case
+- Be specific to the actual topic (e.g. "JEE Optics Refraction" not "Physics Question")
+- No punctuation or emojis at the end
+- Sound like a chapter heading, not a question
+Good examples: "NEET Genetics Mnemonics", "UI/UX Portfolio Review", "React Hooks Deep Dive", "Confidence Building Tips"`
+                    },
+                    { role: "user", content: `Generate a chat title for: "${userMsg}"` }
+                ],
+                max_tokens: 15,
+                temperature: 0.3
+            })
+            : Promise.resolve(null);
+
+        // 🚀 Fire all three in parallel
+        const [ytResults, claudeResp, titleResp] = await Promise.all([
+            ytQuery && ytQuery.toLowerCase() !== "null"
+                ? fetchYoutubeVideos(ytQuery)
+                : Promise.resolve([]),
+            anthropic.messages.create({
+                model: "claude-3-haiku-20240307",
+                max_tokens: 1000,
+                temperature: 0.6,
+                system: voiceInstructions,
+                messages: claudeMessages
+            }),
+            titlePromise
+        ]);
 
         const finalLessonText = claudeResp.content[0].text;
+        const chatTitle = titleResp
+            ? titleResp.choices[0].message.content.trim().replace(/^["']|["']$/g, '')
+            : null;
 
         if (intent === "roadmap_generation") {
             savedRoadmap = finalLessonText;
@@ -177,7 +205,9 @@ ${pedagogicalRules}`;
             ...data,
             response: finalLessonText,
             snapshot: data.memory_snapshot,
-            topic: data.current_topic
+            topic: data.current_topic,
+            youtube_results: ytResults,
+            chatTitle // null if not first message; frontend uses it to set the sidebar title
         };
 
         res.json(responseData);
