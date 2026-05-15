@@ -1,11 +1,9 @@
 const { google } = require('googleapis');
 const OpenAI = require('openai');
-const Anthropic = require('@anthropic-ai/sdk');
 const axios = require('axios');
 
 // Initialize Clients
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const youtube = google.youtube({ version: 'v3', auth: process.env.YOUTUBE_API_KEY });
 
 // Global state (in a real app, this should be in a database)
@@ -94,7 +92,6 @@ JSON SCHEMA (Strictly return valid JSON):
 }`;
 
         const oaiMessages = [{ role: "system", content: routerInstructions }];
-        // Only include history entries that have both user and assistant content
         history.filter(m => m.u && m.topic).slice(-12).forEach(m => {
             oaiMessages.push({ role: "user", content: m.u });
             oaiMessages.push({ role: "assistant", content: `Context: ${m.snapshot} | Taught: ${m.topic}` });
@@ -111,25 +108,24 @@ JSON SCHEMA (Strictly return valid JSON):
         const data = JSON.parse(oaiResp.choices[0].message.content);
 
         // ── STEPS 2, 3 & 4 run in PARALLEL ───────────────────────────────────────
-        // All three depend on Step 1 but are independent of each other.
         const intent = data.intent || 'lesson_delivery';
         const ytQuery = data.youtube_query;
 
-        // Build Claude Voice system prompt
+        // Build Voice system prompt
         let pedagogicalRules = "";
         if (intent === "roadmap_generation") {
             pedagogicalRules = `
 PEDAGOGICAL RULES (CRITICAL):
 1. STRICT TEMPLATE: You must output ONLY a clean, multi-phase roadmap.
-2. TIMELINE PACING: ONLY add timeframes IF the user explicitly asks.
+2. TIMELINE PACING: ONLY add timeframes IF requested.
 3. EXACT FORMATTING: ### Phase 1: [Name] \n - **Topic 1:** [Name]
-4. NO EXTRA FLUFF: Do not explain the phases.
+4. NO EXTRA FLUFF.
 5. THE MENU: End by asking if they are ready to start.
 6. NO EMOJIS.`;
         } else {
             pedagogicalRules = `
 PEDAGOGICAL RULES (CRITICAL):
-1. ORGANIC STRUCTURE: Use a mix of short paragraphs and bolded bullet points.
+1. ORGANIC STRUCTURE: Use short paragraphs and bolded bullet points.
 2. NO META-HEADERS.
 3. COST CONTROL: Max 450 words.
 4. REAL-WORLD ANALOGIES: Include a "### Real-World Example:" section.
@@ -148,15 +144,14 @@ STATE:
 
 ${pedagogicalRules}`;
 
-        const claudeMessages = [];
-        // Only include history entries that have both user and assistant content
+        const voiceMessages = [{ role: "system", content: voiceInstructions }];
         history.filter(m => m.u && m.a).slice(-12).forEach(m => {
-            claudeMessages.push({ role: "user", content: m.u });
-            claudeMessages.push({ role: "assistant", content: m.a });
+            voiceMessages.push({ role: "user", content: m.u });
+            voiceMessages.push({ role: "assistant", content: m.a });
         });
-        claudeMessages.push({ role: "user", content: userMsg });
+        voiceMessages.push({ role: "user", content: userMsg });
 
-        // Chat title generation — only on the very first message of a session
+        // Chat title generation — only on the first message
         const isFirstMessage = history.length === 0;
         const titlePromise = isFirstMessage
             ? openai.chat.completions.create({
@@ -164,37 +159,29 @@ ${pedagogicalRules}`;
                 messages: [
                     {
                         role: "system",
-                        content: `You generate short, memorable chat titles for a student AI tutor app.
-Rules:
-- 3-5 words only, title case
-- Be specific to the actual topic (e.g. "JEE Optics Refraction" not "Physics Question")
-- No punctuation or emojis at the end
-- Sound like a chapter heading, not a question
-Good examples: "NEET Genetics Mnemonics", "UI/UX Portfolio Review", "React Hooks Deep Dive", "Confidence Building Tips"`
-                    },
-                    { role: "user", content: `Generate a chat title for: "${userMsg}"` }
+                        content: `Generate a 3-5 word, specific chat title for: "${userMsg}". Title Case, no punctuation.`
+                    }
                 ],
                 max_tokens: 15,
                 temperature: 0.3
             })
             : Promise.resolve(null);
 
-        // 🚀 Fire all three in parallel
-        const [ytResults, claudeResp, titleResp] = await Promise.all([
+        // 🚀 Parallel execution
+        const [ytResults, voiceResp, titleResp] = await Promise.all([
             ytQuery && ytQuery.toLowerCase() !== "null"
                 ? fetchYoutubeVideos(ytQuery)
                 : Promise.resolve([]),
-            anthropic.messages.create({
-                model: "claude-3-5-sonnet-20241022",
+            openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: voiceMessages,
                 max_tokens: 1000,
-                temperature: 0.6,
-                system: voiceInstructions,
-                messages: claudeMessages
+                temperature: 0.7
             }),
             titlePromise
         ]);
 
-        const finalLessonText = claudeResp.content[0].text;
+        const finalLessonText = voiceResp.choices[0].message.content;
         const chatTitle = titleResp
             ? titleResp.choices[0].message.content.trim().replace(/^["']|["']$/g, '')
             : null;
@@ -209,7 +196,7 @@ Good examples: "NEET Genetics Mnemonics", "UI/UX Portfolio Review", "React Hooks
             snapshot: data.memory_snapshot,
             topic: data.current_topic,
             youtube_results: ytResults,
-            chatTitle // null if not first message; frontend uses it to set the sidebar title
+            chatTitle
         };
 
         res.json(responseData);
