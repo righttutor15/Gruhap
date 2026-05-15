@@ -94,7 +94,8 @@ JSON SCHEMA (Strictly return valid JSON):
 }`;
 
         const oaiMessages = [{ role: "system", content: routerInstructions }];
-        history.slice(-12).forEach(m => {
+        // Only include history entries that have both user and assistant content
+        history.filter(m => m.u && m.topic).slice(-12).forEach(m => {
             oaiMessages.push({ role: "user", content: m.u });
             oaiMessages.push({ role: "assistant", content: `Context: ${m.snapshot} | Taught: ${m.topic}` });
         });
@@ -148,7 +149,8 @@ STATE:
 ${pedagogicalRules}`;
 
         const claudeMessages = [];
-        history.slice(-12).forEach(m => {
+        // Only include history entries that have both user and assistant content
+        history.filter(m => m.u && m.a).slice(-12).forEach(m => {
             claudeMessages.push({ role: "user", content: m.u });
             claudeMessages.push({ role: "assistant", content: m.a });
         });
