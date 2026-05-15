@@ -185,7 +185,7 @@ Good examples: "NEET Genetics Mnemonics", "UI/UX Portfolio Review", "React Hooks
                 ? fetchYoutubeVideos(ytQuery)
                 : Promise.resolve([]),
             anthropic.messages.create({
-                model: "claude-3-haiku-20240307",
+                model: "claude-3-5-haiku-latest",
                 max_tokens: 1000,
                 temperature: 0.6,
                 system: voiceInstructions,
