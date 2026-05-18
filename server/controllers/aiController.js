@@ -17,6 +17,31 @@ const parseDuration = (duration) => {
     return hours * 3600 + minutes * 60 + seconds;
 };
 
+// Generate a 3-5 word Title using OpenAI model
+const generateChatTitle = async (firstMessage) => {
+    try {
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                {
+                    role: "system",
+                    content: "Generate a 3-5 word, highly specific chat title based on the user's initial message. Use Title Case and do not include any punctuation or quotation marks."
+                },
+                {
+                    role: "user",
+                    content: firstMessage
+                }
+            ],
+            max_tokens: 15,
+            temperature: 0.3
+        });
+        return response.choices[0].message.content.trim().replace(/^["']|["']$/g, '');
+    } catch (error) {
+        console.error("Chat title generation failed:", error);
+        return null;
+    }
+};
+
 // Production-grade JSON repair system.
 const robustJsonLoad = (rawText) => {
     if (!rawText) {
@@ -215,7 +240,7 @@ JSON SCHEMA (Strictly return valid JSON):
 
         const oaiMessages = [{ role: "system", content: routerInstructions }];
         slicedHistory.forEach(m => {
-            if (m.u) {
+            if (m.u && (m.snapshot || m.topic || m.memory_snapshot || m.current_topic)) {
                 oaiMessages.push({ role: "user", content: m.u });
                 const snapshot = m.snapshot || m.memory_snapshot || 'N/A';
                 const topic = m.topic || m.current_topic || 'N/A';
@@ -310,33 +335,19 @@ ${pedagogicalRules}`;
         voiceMessages.push({ role: "user", content: userMsg });
 
         // Chat title generation — only on the first message
-        const isFirstMessage = history.length === 0;
+        const isFirstMessage = !history.some(m => m.a);
         const titlePromise = isFirstMessage
-            ? openai.chat.completions.create({
-                model: "gpt-4o-mini",
-                messages: [
-                    {
-                        role: "system",
-                        content: `Generate a 3-5 word, specific chat title for: "${userMsg}". Title Case, no punctuation.`
-                    }
-                ],
-                max_tokens: 15,
-                temperature: 0.3
-            })
+            ? generateChatTitle(userMsg)
             : Promise.resolve(null);
 
         // 🚀 Parallel execution of YouTube, Voice response, and Chat Title
-        const [ytResults, voiceText, titleResp] = await Promise.all([
+        const [ytResults, voiceText, chatTitle] = await Promise.all([
             ytQuery && ytQuery.toLowerCase() !== "null"
                 ? fetchYoutubeVideos(ytQuery)
                 : Promise.resolve([]),
             callVoiceModel(voiceInstructions, voiceMessages),
             titlePromise
         ]);
-
-        const chatTitle = titleResp
-            ? titleResp.choices[0].message.content.trim().replace(/^["']|["']$/g, '')
-            : null;
 
         if (intent === "roadmap_generation") {
             savedRoadmap = voiceText;
