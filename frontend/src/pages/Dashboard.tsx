@@ -66,6 +66,7 @@ interface ChatSession {
   title: string;
   history: any[];
   createdAt: number;
+  botType?: 'curriculum' | 'specialized';
 }
 
 const subjectChips = [
@@ -124,6 +125,7 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [allChats, setAllChats] = useState<ChatSession[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [activeBotType, setActiveBotType] = useState<'curriculum' | 'specialized'>('curriculum');
 
   // Dialog states for stats
   const [activeDialog, setActiveDialog] = useState<string | null>(null);
@@ -226,7 +228,8 @@ const Dashboard = () => {
         id: activeId,
         title: "New Chat",
         history: updatedHistory,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        botType: activeBotType
       };
       setAllChats(prev => [newChat, ...prev]);
     }
@@ -235,7 +238,7 @@ const Dashboard = () => {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userMsg: msg, history: updatedHistory })
+        body: JSON.stringify({ userMsg: msg, history: updatedHistory, botType: activeBotType })
       });
 
       if (!response.ok) {
@@ -299,12 +302,14 @@ const Dashboard = () => {
     setChatHistory([]);
     setCurrentChatId(null);
     setMessage("");
+    setActiveBotType('curriculum');
     if (isMobile) setSidebarOpen(false);
   };
 
   const loadChat = (chat: ChatSession) => {
     setCurrentChatId(chat.id);
     setChatHistory(chat.history);
+    setActiveBotType(chat.botType || 'specialized');
     if (isMobile) setSidebarOpen(false);
   };
 
@@ -442,7 +447,12 @@ const Dashboard = () => {
                           : "text-foreground/90 hover:text-foreground hover:bg-muted/60"
                           }`}
                       >
-                        <span className="truncate text-left flex-1 mr-2">{chat.title}</span>
+                        <div className="flex flex-col flex-1 min-w-0 mr-2 text-left">
+                          <span className="truncate">{chat.title}</span>
+                          <span className="text-[10px] text-muted-foreground/75 font-normal tracking-tight">
+                            {chat.botType === 'specialized' ? '⚡ Specialized Planner' : '🎓 Curriculum Tutor'}
+                          </span>
+                        </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
@@ -561,6 +571,19 @@ const Dashboard = () => {
             className="flex-1 overflow-y-auto chat-scrollbar px-4 sm:px-6"
           >
             <div className="max-w-2xl mx-auto pt-10 sm:pt-20 md:pt-32 pb-10">
+              {chatHistory.length > 0 && (
+                <div className="sticky top-0 z-10 flex justify-center pb-4 pt-2 -mt-4 bg-gradient-to-b from-background via-background/90 to-transparent">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 dark:bg-card/60 backdrop-blur-md border border-border/50 rounded-full shadow-sm">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[11px] font-bold tracking-tight text-foreground/80 uppercase">
+                      {activeBotType === 'specialized' ? '⚡ Specialized Syllabus Planner' : '🎓 Curriculum AI Tutor'}
+                    </span>
+                  </div>
+                </div>
+              )}
               {chatHistory.length === 0 ? (
                 <motion.div
                   initial={{ opacity: 0, y: 16 }}
@@ -720,6 +743,57 @@ const Dashboard = () => {
                       </button>
                     ))}
                   </motion.div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Chatbot Mode Selector - Animated segmented switch */}
+            {chatHistory.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
+                className="flex justify-center mb-4"
+              >
+                <div className="inline-flex p-1 bg-white/60 dark:bg-card/60 backdrop-blur-md border border-border/50 rounded-2xl shadow-sm relative z-20">
+                  <button
+                    type="button"
+                    onClick={() => setActiveBotType('curriculum')}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all relative ${
+                      activeBotType === 'curriculum'
+                        ? 'text-primary'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {activeBotType === 'curriculum' && (
+                      <motion.div
+                        layoutId="active-bot-pill"
+                        className="absolute inset-0 bg-white dark:bg-background rounded-lg shadow-sm -z-10 border border-primary/10"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    <GraduationCap size={15} className={activeBotType === 'curriculum' ? 'text-primary animate-pulse' : ''} />
+                    <span>Curriculum AI Tutor</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveBotType('specialized')}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all relative ${
+                      activeBotType === 'specialized'
+                        ? 'text-primary'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {activeBotType === 'specialized' && (
+                      <motion.div
+                        layoutId="active-bot-pill"
+                        className="absolute inset-0 bg-white dark:bg-background rounded-lg shadow-sm -z-10 border border-primary/10"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    <Sparkles size={15} className={activeBotType === 'specialized' ? 'text-primary animate-pulse' : ''} />
+                    <span>Specialized Syllabus Planner</span>
+                  </button>
                 </div>
               </motion.div>
             )}
