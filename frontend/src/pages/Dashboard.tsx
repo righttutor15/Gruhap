@@ -583,19 +583,7 @@ const Dashboard = () => {
             className="flex-1 overflow-y-auto chat-scrollbar px-4 sm:px-6"
           >
             <div className="max-w-2xl mx-auto pt-10 sm:pt-20 md:pt-32 pb-10">
-              {chatHistory.length > 0 && (
-                <div className="sticky top-0 z-10 flex justify-center pb-4 pt-2 -mt-4 bg-gradient-to-b from-background via-background/90 to-transparent">
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 dark:bg-card/60 backdrop-blur-md border border-border/50 rounded-full shadow-sm">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <span className="text-[11px] font-bold tracking-tight text-foreground/80 uppercase">
-                      {activeBotType === 'specialized' ? '⚡ Specialized Syllabus Planner' : '🎓 Curriculum AI Tutor'}
-                    </span>
-                  </div>
-                </div>
-              )}
+
               {chatHistory.length === 0 ? (
                 <motion.div
                   initial={{ opacity: 0, y: 16 }}
@@ -770,11 +758,10 @@ const Dashboard = () => {
                 <button
                   type="button"
                   onClick={() => handleBotTypeChange('curriculum')}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all relative ${
-                    activeBotType === 'curriculum'
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all relative ${activeBotType === 'curriculum'
                       ? 'text-primary'
                       : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                    }`}
                 >
                   {activeBotType === 'curriculum' && (
                     <motion.div
@@ -789,11 +776,10 @@ const Dashboard = () => {
                 <button
                   type="button"
                   onClick={() => handleBotTypeChange('specialized')}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all relative ${
-                    activeBotType === 'specialized'
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all relative ${activeBotType === 'specialized'
                       ? 'text-primary'
                       : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                    }`}
                 >
                   {activeBotType === 'specialized' && (
                     <motion.div
