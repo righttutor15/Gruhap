@@ -127,6 +127,18 @@ const Dashboard = () => {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [activeBotType, setActiveBotType] = useState<'curriculum' | 'specialized'>('curriculum');
 
+  const handleBotTypeChange = (type: 'curriculum' | 'specialized') => {
+    setActiveBotType(type);
+    if (currentChatId) {
+      setAllChats(prev => prev.map(chat => {
+        if (chat.id === currentChatId) {
+          return { ...chat, botType: type };
+        }
+        return chat;
+      }));
+    }
+  };
+
   // Dialog states for stats
   const [activeDialog, setActiveDialog] = useState<string | null>(null);
 
@@ -748,55 +760,53 @@ const Dashboard = () => {
             )}
 
             {/* Chatbot Mode Selector - Animated segmented switch */}
-            {chatHistory.length === 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.5 }}
-                className="flex justify-center mb-4"
-              >
-                <div className="inline-flex p-1 bg-white/60 dark:bg-card/60 backdrop-blur-md border border-border/50 rounded-2xl shadow-sm relative z-20">
-                  <button
-                    type="button"
-                    onClick={() => setActiveBotType('curriculum')}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all relative ${
-                      activeBotType === 'curriculum'
-                        ? 'text-primary'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {activeBotType === 'curriculum' && (
-                      <motion.div
-                        layoutId="active-bot-pill"
-                        className="absolute inset-0 bg-white dark:bg-background rounded-lg shadow-sm -z-10 border border-primary/10"
-                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                      />
-                    )}
-                    <GraduationCap size={15} className={activeBotType === 'curriculum' ? 'text-primary animate-pulse' : ''} />
-                    <span>Curriculum AI Tutor</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveBotType('specialized')}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all relative ${
-                      activeBotType === 'specialized'
-                        ? 'text-primary'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {activeBotType === 'specialized' && (
-                      <motion.div
-                        layoutId="active-bot-pill"
-                        className="absolute inset-0 bg-white dark:bg-background rounded-lg shadow-sm -z-10 border border-primary/10"
-                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                      />
-                    )}
-                    <Sparkles size={15} className={activeBotType === 'specialized' ? 'text-primary animate-pulse' : ''} />
-                    <span>Specialized Syllabus Planner</span>
-                  </button>
-                </div>
-              </motion.div>
-            )}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+              className="flex justify-center mb-4"
+            >
+              <div className="inline-flex p-1 bg-white/60 dark:bg-card/60 backdrop-blur-md border border-border/50 rounded-2xl shadow-sm relative z-20">
+                <button
+                  type="button"
+                  onClick={() => handleBotTypeChange('curriculum')}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all relative ${
+                    activeBotType === 'curriculum'
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {activeBotType === 'curriculum' && (
+                    <motion.div
+                      layoutId="active-bot-pill"
+                      className="absolute inset-0 bg-white dark:bg-background rounded-lg shadow-sm -z-10 border border-primary/10"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <GraduationCap size={15} className={activeBotType === 'curriculum' ? 'text-primary animate-pulse' : ''} />
+                  <span>Curriculum AI Tutor</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleBotTypeChange('specialized')}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all relative ${
+                    activeBotType === 'specialized'
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {activeBotType === 'specialized' && (
+                    <motion.div
+                      layoutId="active-bot-pill"
+                      className="absolute inset-0 bg-white dark:bg-background rounded-lg shadow-sm -z-10 border border-primary/10"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <Sparkles size={15} className={activeBotType === 'specialized' ? 'text-primary animate-pulse' : ''} />
+                  <span>Specialized Syllabus Planner</span>
+                </button>
+              </div>
+            </motion.div>
 
             {/* Composer pill - lively neumorphism */}
             <motion.form
