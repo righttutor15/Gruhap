@@ -759,8 +759,8 @@ const Dashboard = () => {
                   type="button"
                   onClick={() => handleBotTypeChange('curriculum')}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all relative ${activeBotType === 'curriculum'
-                      ? 'text-primary'
-                      : 'text-muted-foreground hover:text-foreground'
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
                   {activeBotType === 'curriculum' && (
@@ -777,8 +777,8 @@ const Dashboard = () => {
                   type="button"
                   onClick={() => handleBotTypeChange('specialized')}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all relative ${activeBotType === 'specialized'
-                      ? 'text-primary'
-                      : 'text-muted-foreground hover:text-foreground'
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
                   {activeBotType === 'specialized' && (

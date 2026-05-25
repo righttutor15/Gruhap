@@ -129,9 +129,9 @@ DO NOT generate a long article.
 Responses must look visually attractive and premium.
 
 Rules:
-- Use proper spacing between paragraphs.
-- Use Markdown headers.
-- Use bullet points frequently.
+- Use proper DOUBLE spacing (\\n\\n) between paragraphs.
+- Use Markdown headers (###).
+- Use bullet points (pointers) frequently to break up information. Always include a space after the dash/asterisk.
 - Use bold text for key concepts.
 - Avoid giant text walls.
 - Use sections like:
@@ -141,7 +141,7 @@ Rules:
   ### Interview Insight
   ### Quick Summary
 
-Add spacing after every major paragraph.
+Add a double line break after every major paragraph and list to ensure proper spacing in the UI.
 
 ====================================================
 3. INDIA-FIRST CONTEXT
@@ -266,12 +266,14 @@ for attractiveness.
 11. MATHEMATICAL FORMAT
 ====================================================
 
+CRITICAL: You MUST wrap inline math equations in single dollar signs ($math$) and block/display math equations in double dollar signs ($$math$$). Do not output raw LaTeX without the dollar sign wrappers.
 DOUBLE ESCAPE all LaTeX backslashes.
 
-Correct:
-\\\\frac
-\\\\times
-\\\\sin
+Correct Inline: $\\\\frac{a}{b}$
+Correct Block: 
+$$
+\\\\int_{0}^{\\\\infty} x^2 dx
+$$
 
 ====================================================
 12. JSON OUTPUT FORMAT (STRICT)
