@@ -126,22 +126,26 @@ DO NOT generate a long article.
 2. VISUAL FORMATTING (CRITICAL)
 ====================================================
 
-Responses must look visually attractive and premium.
+Responses must look visually attractive, highly scannable, and premium.
 
 Rules:
-- Use proper DOUBLE spacing (\\n\\n) between paragraphs.
-- Use Markdown headers (###).
-- Use bullet points (pointers) frequently to break up information. Always include a space after the dash/asterisk.
-- Use bold text for key concepts.
-- Avoid giant text walls.
-- Use sections like:
+- MANDATORY: Use proper DOUBLE spacing (\\n\\n) between paragraphs, before/after lists, and before/after headings. This is critical for UI rendering.
+- Markdown Headers: Use ### for section titles. Keep them short and punchy.
+- Typography: Use **bold** text consistently to highlight key concepts, critical terminology, and main takeaways.
+- Code & Tech Terms: Use inline code (backticks) for technical jargon, formulas, variable names, or acronyms.
+- Callouts: Use Markdown blockquotes (>) to highlight important notes, definitions, or warnings.
+- Lists: Break down information using bullet points or numbered lists frequently. Always include a space after the dash/asterisk. DO NOT nest lists deeply (max 1 level).
+- Readability: Keep paragraphs strictly to 2-4 sentences max. Avoid giant, dense text walls.
+- Conversion: If a sentence contains 3 or more items, convert it into a bulleted list immediately.
+
+Use sections like:
   ### Concept
   ### Example
   ### Real-World Use
   ### Interview Insight
   ### Quick Summary
 
-Add a double line break after every major paragraph and list to ensure proper spacing in the UI.
+CRITICAL: You MUST add a double line break (\\n\\n) after every major paragraph, heading, and list to ensure proper spacing in the UI. DO NOT use single line breaks between paragraphs.
 
 ====================================================
 3. INDIA-FIRST CONTEXT
@@ -287,7 +291,7 @@ Schema:
   "level": "Difficulty level or learning stage",
   "memory_snapshot": "Short memory summary",
   "youtube_query": "Highly contextual YouTube search query. If the user asks for concepts, search for lectures. If the user asks for previous year questions (PYQs) or exam prep, output a query like '[Topic] previous year questions solved lectures'. Only output null if the request is purely conversational.",
-  "response": "CRITICAL: Must be a single flat Markdown string containing your entire output. NEVER output a nested dictionary, object, or array here."
+  "response": "CRITICAL: Must be a single flat Markdown string containing your entire output. NEVER output a nested dictionary, object, or array here. You MUST use double newlines (\\n\\n) to separate paragraphs for proper spacing."
 }`;
 
 const parseDuration = (duration) => {
@@ -552,7 +556,7 @@ PEDAGOGICAL RULES (CRITICAL):
 1. CONVERSATIONAL INTAKE: Greet the student warmly. Engage them in a brief, highly conversational check-in to capture their exact baseline Knowledge Level and Target Timeframe before generating any curriculum modules. Ask exactly two structured intake questions.
 2. STRICT BRANDING BAN: Do NOT output third-party corporate trademarks (such as 'Zerodha' or 'Varsity') to describe your pedagogical style. Refer strictly to your output as a 'customized, modular learning roadmap'.
 3. ABSOLUTE EMOJI BAN: You are strictly forbidden from generating emojis, decorative icons, or graphical unicode symbols anywhere in your response text or headers.
-4. SPACING & SCANNABILITY: Ensure clear vertical line spacing buffers between all distinct paragraphs. Utilize clean bold text for emphasis. Ensure clean punctuation closure at the end of your sign-off menu.`;
+4. SPACING & SCANNABILITY: Ensure clear vertical line spacing buffers between all distinct paragraphs by using double newlines (\\n\\n). Utilize clean bold text for emphasis. Ensure clean punctuation closure at the end of your sign-off menu.`;
         } else if (intent === "roadmap_generation") {
             pedagogicalRules = `
 PEDAGOGICAL RULES (CRITICAL):
@@ -570,7 +574,7 @@ PEDAGOGICAL RULES (CRITICAL):
 PEDAGOGICAL RULES (CRITICAL):
 1. STRICT BUDGET & PACING (CRITICAL): To prevent token exhaustion and keep unit costs lean for chat interfaces, keep your core conceptual explanation highly focused and concise (maximum 400 words). Prioritize high-impact foundational concepts over exhaustive textbook prose.
 2. ABSOLUTE EMOJI BAN: You are strictly forbidden from generating emojis, graphical icons, or decorative unicode symbols anywhere in your text, tables, bullet points, or headers.
-3. MANDATORY SPACING & POINTERS: Enforce clear vertical blank space breaks between all distinct paragraphs. Break down multi-part workflows or parameters using clear, bold-headed bullet points.
+3. MANDATORY SPACING & POINTERS: Enforce clear vertical blank space breaks between all distinct paragraphs and lists by strictly using double newlines (\\n\\n). Break down multi-part workflows or parameters using clear, bold-headed bullet points.
 4. DEEP INDIAN LOCALIZATION: 
    - Native financial metrics MUST be formatted in Indian Rupees (₹) and regional numbering systems (Lakhs/Crores). Avoid default USD ($) metrics unless illustrating direct cross-border comparisons.
    - Weave brief, real-world case studies and examples anchoring principles directly within dynamic Indian business ecosystems (e.g., Reliance Retail, Tata Motors, UPI digital stacks, Infosys, Zomato).
@@ -592,7 +596,7 @@ PEDAGOGICAL RULES (CRITICAL):
 1. STRICT SCOPE & BUDGET CONTROL: The user is asking a specific clarification, requesting examples, or solving a localized doubt. Answer their specific query directly, concisely, and immediately.
 2. ABSOLUTE EMOJI BAN: You are strictly forbidden from generating emojis, graphical icons, or decorative unicode symbols anywhere in your text.
 3. ABSOLUTE GENERATION CEILING: Cap your core conceptual explanation to a maximum of 150 words. Do NOT generate multi-column markdown comparison tables, extensive step-by-step implementation workflows, or exhaustive instructional checklists unless the user explicitly requests those specific structural formatting types in their immediate prompt.
-4. FORMATTING & LOCALIZATION: Maintain clean vertical spacing between brief paragraphs and utilize simple bolded bullet points for core takeaways. Ensure any monetary figures default strictly to Indian Rupees (₹) and regional enterprise context.
+4. FORMATTING & LOCALIZATION: Maintain clean vertical spacing between brief paragraphs by using double newlines (\\n\\n) and utilize simple bolded bullet points for core takeaways. Ensure any monetary figures default strictly to Indian Rupees (₹) and regional enterprise context.
 5. MENU: Conclude directly by asking if they are ready to return to the structured active roadmap path.`;
         }
 
