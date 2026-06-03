@@ -8,11 +8,21 @@ const adminRoutes = require('./routes/adminRoutes');
 const { verifyAdminToken } = require('./middleware/adminAuth');
 
 const app = express();
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.ADMIN_URL,
+  'http://localhost:5173',
+  'http://localhost:5174'
+].filter(Boolean).map(url => url.replace(/\/$/, '')); // Strip trailing slashes
+
 const corsOptions = {
-  origin: [
-    process.env.CLIENT_URL || 'http://localhost:5173',
-    process.env.ADMIN_URL || 'http://localhost:5174'
-  ],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 };
 app.use(cors(corsOptions));
