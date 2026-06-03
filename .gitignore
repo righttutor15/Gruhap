@@ -18,7 +18,7 @@ build/
 
 # Environment / Secrets
 # Secrets and sensitive files
-server/*.json
+
 **/gruhap-a7354-firebase-adminsdk-*.json
 .env*
 **/.env*
