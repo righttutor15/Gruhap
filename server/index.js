@@ -8,13 +8,13 @@ const adminRoutes = require('./routes/adminRoutes');
 const { verifyAdminToken } = require('./middleware/adminAuth');
 
 const app = express();
-const corsOptions = {
-  origin: true, // Reflects the incoming origin, allowing all but supporting credentials
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-};
-app.use(cors(corsOptions));
+// const corsOptions = {
+//   origin: true, // Reflects the incoming origin, allowing all but supporting credentials
+//   credentials: true,
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+// };
+app.use(cors());
 app.use(express.json());
 
 // Routes
