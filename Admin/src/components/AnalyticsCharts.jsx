@@ -4,22 +4,7 @@ import {
   BarChart, Bar, Cell, PieChart, Pie
 } from 'recharts';
 
-const USER_GROWTH_DATA = [
-  { name: 'Jan', users: 400, tokens: 2400 },
-  { name: 'Feb', users: 300, tokens: 1398 },
-  { name: 'Mar', users: 600, tokens: 9800 },
-  { name: 'Apr', users: 800, tokens: 3908 },
-  { name: 'May', users: 500, tokens: 4800 },
-  { name: 'Jun', users: 900, tokens: 3800 },
-];
-
-const CATEGORY_DATA = [
-  { name: 'JEE Prep', value: 45, color: '#aa3bff' },
-  { name: 'NEET Prep', value: 30, color: '#2495d5' },
-  { name: 'K12 Subjects', value: 25, color: '#f59e0b' },
-];
-
-const AnalyticsCharts = () => {
+const AnalyticsCharts = ({ userGrowthData = [], categoryData = [] }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       {/* User Growth Chart */}
@@ -33,7 +18,7 @@ const AnalyticsCharts = () => {
         </div>
         <div className="flex-1 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={USER_GROWTH_DATA}>
+            <AreaChart data={userGrowthData}>
               <defs>
                 <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#aa3bff" stopOpacity={0.3}/>
@@ -81,7 +66,7 @@ const AnalyticsCharts = () => {
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={CATEGORY_DATA}
+                data={categoryData}
                 cx="50%"
                 cy="50%"
                 innerRadius={80}
@@ -89,7 +74,7 @@ const AnalyticsCharts = () => {
                 paddingAngle={5}
                 dataKey="value"
               >
-                {CATEGORY_DATA.map((entry, index) => (
+                {categoryData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
@@ -102,7 +87,7 @@ const AnalyticsCharts = () => {
           </div>
         </div>
         <div className="grid grid-cols-3 gap-2 mt-4">
-          {CATEGORY_DATA.map((item) => (
+          {categoryData.map((item) => (
             <div key={item.name} className="flex flex-col items-center">
               <div className="flex items-center gap-1.5 mb-1">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />

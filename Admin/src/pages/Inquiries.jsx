@@ -14,9 +14,9 @@ const Inquiries = () => {
         <div className="flex items-center gap-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-            <input 
-              type="text" 
-              placeholder="Filter by subject..." 
+            <input
+              type="text"
+              placeholder="Filter by subject..."
               className="bg-secondary/30 border border-border/50 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 w-64 transition-all"
             />
           </div>
@@ -24,14 +24,14 @@ const Inquiries = () => {
       </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
           { label: 'Total Inquiries', value: '48', icon: Inbox, color: 'bg-primary' },
           { label: 'Pending', value: '12', icon: MessageSquare, color: 'bg-amber-500' },
           { label: 'Urgent', value: '02', icon: Mail, color: 'bg-rose-500' },
           { label: 'Resolved Today', value: '08', icon: Inbox, color: 'bg-emerald-500' },
         ].map((stat, i) => (
-          <motion.div 
+          <motion.div
             key={i}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -45,7 +45,7 @@ const Inquiries = () => {
             <h3 className="text-2xl font-display font-bold">{stat.value}</h3>
           </motion.div>
         ))}
-      </div>
+      </div> */}
 
       <InquiriesTable />
     </div>
