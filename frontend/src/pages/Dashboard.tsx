@@ -33,7 +33,7 @@ import {
   Lightbulb,
   Rocket,
 } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -55,9 +55,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useTypewriter } from "@/hooks/useTypewriter";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { TokenInfo, BalanceInfo, SubscriptionInfo } from "@/components/dashboard/UserStats";
+import { logout } from "@/store/slices/authSlice";
 
 // import ThemeToggle from "@/components/ThemeToggle";
 
@@ -116,6 +117,8 @@ const rotatingPrompts = [
 
 const Dashboard = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const { user } = useSelector((state: RootState) => state.auth);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -558,10 +561,8 @@ const Dashboard = () => {
                   <Settings className="mr-2 h-4 w-4" /> Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/login">
+                <DropdownMenuItem onClick={() => { dispatch(logout()); navigate('/login'); }}>
                     <LogOut className="mr-2 h-4 w-4" /> Sign out
-                  </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

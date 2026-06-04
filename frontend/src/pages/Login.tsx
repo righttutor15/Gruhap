@@ -3,6 +3,9 @@ import { motion } from "framer-motion";
 import { ArrowLeft, X, ArrowRight, Mail, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useDispatch, useSelector } from "react-redux";
+import { setLoading, setAuthSuccess, setAuthFailure } from "@/store/slices/authSlice";
+import { RootState } from "@/store";
 
 const chatMessages = [
     { from: "ai", text: "Hey! Ready to crush your study goals today?" },
@@ -15,6 +18,8 @@ const chatMessages = [
 const Login = () => {
     const { toast } = useToast();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const { isLoading } = useSelector((state: RootState) => state.auth);
     const [mode, setMode] = useState<"phone" | "email">("phone");
     const [phone, setPhone] = useState("");
     const [email, setEmail] = useState("");
@@ -31,10 +36,44 @@ const Login = () => {
         navigate("/dashboard");
     };
 
-    const handleEmailSubmit = (e: React.FormEvent) => {
+    const handleEmailSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        toast({ title: "Welcome back!", description: "Signed in successfully." });
-        navigate("/dashboard");
+
+        if (!email || !password) {
+            toast({ title: "Missing fields", description: "Please enter email and password.", variant: "destructive" });
+            return;
+        }
+
+        dispatch(setLoading(true));
+
+        try {
+            const response = await fetch(`${import.meta.env.VITE_AUTH_API_BASE_URL}/api/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                dispatch(setAuthSuccess({
+                    uid: data.uid,
+                    email: email,
+                    displayName: data.displayName || email.split("@")[0],
+                }));
+                toast({ title: "Welcome back!", description: "Signed in successfully." });
+                navigate("/dashboard");
+            } else {
+                const errorMsg = data.message || data.error || "Login failed. Please check your credentials.";
+                dispatch(setAuthFailure(errorMsg));
+                toast({ title: "Login Failed", description: errorMsg, variant: "destructive" });
+            }
+        } catch (error) {
+            dispatch(setAuthFailure("Something went wrong"));
+            toast({ title: "Error", description: "Could not connect to the server. Please try again.", variant: "destructive" });
+        } finally {
+            dispatch(setLoading(false));
+        }
     };
 
     return (
@@ -69,16 +108,16 @@ const Login = () => {
                             >
                                 <div
                                     className={`w-9 h-9 rounded-full flex items-center justify-center font-display font-bold text-sm shrink-0 ${m.from === "ai"
-                                            ? "bg-primary text-primary-foreground"
-                                            : "bg-emerald-500 text-white"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-emerald-500 text-white"
                                         }`}
                                 >
                                     {m.from === "ai" ? "G" : "U"}
                                 </div>
                                 <div
                                     className={`max-w-[78%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${m.from === "ai"
-                                            ? "bg-card text-card-foreground rounded-tl-sm"
-                                            : "bg-primary text-primary-foreground rounded-tr-sm"
+                                        ? "bg-card text-card-foreground rounded-tl-sm"
+                                        : "bg-primary text-primary-foreground rounded-tr-sm"
                                         }`}
                                 >
                                     {m.from === "ai" && (
@@ -223,11 +262,16 @@ const Login = () => {
 
                             <motion.button
                                 type="submit"
+                                disabled={isLoading}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-primary text-primary-foreground font-semibold tracking-wide uppercase text-sm hover:opacity-90 transition-opacity"
+                                className="w-full flex items-center justify-center gap-2 h-12 rounded-xl bg-primary text-primary-foreground font-semibold tracking-wide uppercase text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
                             >
-                                Sign In <ArrowRight size={16} />
+                                {isLoading ? (
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <>Sign In <ArrowRight size={16} /></>
+                                )}
                             </motion.button>
 
                             <button
@@ -242,7 +286,7 @@ const Login = () => {
 
                     <p className="text-center text-sm text-muted-foreground mt-8">
                         Don't have an account?{" "}
-                        <Link to="/get-started" className="text-cta font-semibold hover:underline">
+                        <Link to="/signup" className="text-cta font-semibold hover:underline">
                             Sign Up
                         </Link>
                     </p>

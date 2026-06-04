@@ -19,6 +19,7 @@ const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const ContactUs = lazy(() => import("./pages/ContactUs"));
 const Login = lazy(() => import("./pages/Login"));
 const GetStarted = lazy(() => import("./pages/GetStarted"));
+const Signup = lazy(() => import("./pages/Signup"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -46,6 +47,7 @@ const AnimatedRoutes = () => {
           <Route path="/community" element={<Community />} />
           <Route path="/login" element={<Login />} />
           <Route path="/get-started" element={<GetStarted />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
