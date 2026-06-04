@@ -322,10 +322,10 @@ const HeroSection = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
+          transition={{ delay: 0.2, duration: 0.2 }}
           className=" w-full max-w-2xl overflow-hidden py-10"
         >
-          <div className="flex marquee whitespace-nowrap min-h-[80px] items-center">
+          <div className="flex marquee whitespace-nowrap min-h-[80px] items-center" style={{ animationDuration: '10s' }}>
             {[...subjects, ...subjects, ...subjects].map((subject, i) => (
               <motion.span
                 key={i}

@@ -144,6 +144,7 @@ const Dashboard = () => {
 
   // Dialog states for stats
   const [activeDialog, setActiveDialog] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const displayText = useTypewriter(rotatingPrompts);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -227,6 +228,14 @@ const Dashboard = () => {
     if (e) e.preventDefault();
     const msg = overrideMsg || message;
     if (!msg.trim() || isLoading) return;
+
+    if (!user) {
+      const totalMessages = allChats.reduce((acc, chat) => acc + chat.history.filter((m: any) => m.u).length, 0);
+      if (totalMessages >= 4) {
+        setShowAuthModal(true);
+        return;
+      }
+    }
 
     const newUserMsg = { u: msg };
     const updatedHistory = [...chatHistory, newUserMsg];
@@ -418,7 +427,7 @@ const Dashboard = () => {
               </Link>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
+                className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-transparent"
                 aria-label="Collapse sidebar"
               >
                 {isMobile ? <X size={16} /> : <CustomMenuIcon />}
@@ -516,10 +525,10 @@ const Dashboard = () => {
             {!sidebarOpen && (
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all"
+                className="w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-transparent"
                 aria-label="Open sidebar"
               >
-                {isMobile ? <Menu size={16} /> : <CustomMenuIcon />}
+                <CustomMenuIcon />
               </button>
             )}
             <Link to="/" className="lg:hidden flex items-center gap-2">
@@ -562,7 +571,7 @@ const Dashboard = () => {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => { dispatch(logout()); navigate('/login'); }}>
-                    <LogOut className="mr-2 h-4 w-4" /> Sign out
+                  <LogOut className="mr-2 h-4 w-4" /> Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -626,7 +635,7 @@ const Dashboard = () => {
                       <button
                         key={box.label}
                         onClick={() => handleSend(undefined, box.prompt)}
-                        className={`flex flex-col items-center justify-center p-4 sm:p-6 rounded-2xl border border-border/50 ${box.bg} hover:border-primary/20 transition-all group`}
+                        className={`flex flex-col items-center justify-center p-4 sm:p-6 rounded-2xl border border-border/50  hover:border-primary/20 transition-all group`}
                       >
                         <div className={`p-2 sm:p-3 rounded-full bg-white shadow-sm mb-3 group-hover:scale-110 transition-transform`}>
                           <box.icon className={box.color} size={20} />
@@ -749,7 +758,7 @@ const Dashboard = () => {
             )}
 
             {/* Chatbot Mode Selector - Animated segmented switch */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.5 }}
@@ -793,7 +802,7 @@ const Dashboard = () => {
                   <span>Specialized Syllabus Planner</span>
                 </button>
               </div>
-            </motion.div>
+            </motion.div> */}
 
             {/* Composer pill - lively neumorphism */}
             <motion.form
@@ -803,18 +812,18 @@ const Dashboard = () => {
               transition={{ delay: 0.4, duration: 0.5 }}
               className="w-full"
             >
-              <div className={`relative rounded-3xl sm:rounded-full p-3 ${surfaceCard}`}>
-                <div className="relative">
+              <div className={`relative flex items-center rounded-3xl sm:rounded-full p-2 pl-4 pr-2 ${surfaceCard}`}>
+                <div className="relative flex-1">
                   <input
                     type="text"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder=""
                     aria-label="Ask Gruhap anything"
-                    className="w-full bg-transparent outline-none text-base px-3 py-2.5 text-foreground relative z-10"
+                    className="w-full bg-transparent outline-none text-base py-2 text-foreground relative z-10"
                   />
                   {!message && (
-                    <div className="pointer-events-none absolute inset-0 flex items-center px-3 overflow-hidden">
+                    <div className="pointer-events-none absolute inset-0 flex items-center overflow-hidden">
                       <span className="text-base text-muted-foreground truncate w-full flex items-center">
                         {displayText}
                         <motion.span
@@ -826,42 +835,18 @@ const Dashboard = () => {
                     </div>
                   )}
                 </div>
-                <div className="flex items-center justify-between mt-1 px-1">
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      className="p-2 rounded-full bg-card/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card transition-colors"
-                      aria-label="Add image"
-                    >
-                      <ImageIcon size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      className="p-2 rounded-full bg-card/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card transition-colors"
-                      aria-label="Attach file"
-                    >
-                      <Paperclip size={16} />
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      className="p-2 rounded-full bg-card/80 backdrop-blur-sm border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 hover:bg-card transition-colors"
-                      aria-label="Voice input"
-                    >
-                      <Mic size={16} />
-                    </button>
-                    <motion.button
-                      whileHover={{ scale: 1.06 }}
-                      whileTap={{ scale: 0.94 }}
-                      type="submit"
-                      disabled={!message.trim()}
-                      className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed shadow-md hover-glow hover:bg-primary/90 transition-all"
-                      aria-label="Send"
-                    >
-                      <ArrowUp size={16} />
-                    </motion.button>
-                  </div>
+
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  <motion.button
+                    whileHover={{ scale: 1.06 }}
+                    whileTap={{ scale: 0.94 }}
+                    type="submit"
+                    disabled={!message.trim()}
+                    className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed shadow-md hover-glow hover:bg-primary/90 transition-all"
+                    aria-label="Send"
+                  >
+                    <ArrowUp size={18} strokeWidth={2.5} />
+                  </motion.button>
                 </div>
               </div>
             </motion.form>
@@ -881,6 +866,29 @@ const Dashboard = () => {
           {activeDialog === "tokens" && <TokenInfo />}
           {activeDialog === "balance" && <BalanceInfo />}
           {activeDialog === "subscription" && <SubscriptionInfo />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Auth Requirement Dialog */}
+      <Dialog open={showAuthModal} onOpenChange={setShowAuthModal}>
+        <DialogContent className="sm:max-w-md rounded-3xl text-center p-8">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold font-display">Sign up to continue</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 mt-4">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cta to-amber-400 flex items-center justify-center shadow-md mb-2">
+              <Sparkles size={28} className="text-white" />
+            </div>
+            <p className="text-muted-foreground text-sm">
+              You've reached the limit of free unauthenticated messages. Sign up or log in to continue chatting with Gruhap and save your progress!
+            </p>
+            <button
+              onClick={() => navigate('/login')}
+              className="mt-4 w-full py-3 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity shadow-md"
+            >
+              Log in / Sign up
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

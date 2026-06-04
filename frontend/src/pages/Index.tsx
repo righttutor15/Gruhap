@@ -19,7 +19,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <HeroSection />
-      
+
       <Suspense fallback={<SectionLoader />}>
         <AITutorsSection />
       </Suspense>

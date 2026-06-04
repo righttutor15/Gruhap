@@ -61,7 +61,14 @@ const Navbar = () => {
         {/* CTA */}
         <div className="hidden lg:flex items-center gap-4">
           {isAuthenticated ? (
-            <div className="relative">
+            <>
+              <Link
+                to="/dashboard"
+                className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
+              >
+                Dashboard
+              </Link>
+              <div className="relative">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
                 className="flex items-center gap-2 px-4 py-2 rounded-full border border-border hover:bg-muted transition-colors text-sm font-medium"
@@ -93,6 +100,7 @@ const Navbar = () => {
                 )}
               </AnimatePresence>
             </div>
+            </>
           ) : (
             <>
               <Link to="/login" className="text-sm font-medium text-foreground hover:text-muted-foreground transition-colors">
@@ -109,8 +117,13 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Toggle */}
-        <button className="lg:hidden text-foreground p-1" onClick={() => setMobileOpen(!mobileOpen)}>
-          {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+        <button className="lg:hidden text-foreground p-1 bg-transparent border-none" onClick={() => setMobileOpen(!mobileOpen)}>
+          {mobileOpen ? <X size={22} /> : (
+            <div className="flex flex-col gap-1.5 items-start justify-center w-6 h-6">
+              <div className="w-5 h-0.5 bg-foreground rounded-full" />
+              <div className="w-3.5 h-0.5 bg-foreground rounded-full" />
+            </div>
+          )}
         </button>
       </div>
 
@@ -151,6 +164,13 @@ const Navbar = () => {
                         <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
                       </div>
                     </div>
+                    <Link
+                      to="/dashboard"
+                      className="w-full text-center px-4 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-semibold"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
                     <button
                       onClick={() => {
                         handleLogout();
