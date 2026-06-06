@@ -536,8 +536,20 @@ const Dashboard = () => {
     if (!branchList || branchList.length <= 1) return;
     const current = activeBranch[msgIndex] ?? branchList.length - 1;
     const next = direction === 'prev' ? Math.max(0, current - 1) : Math.min(branchList.length - 1, current + 1);
+    if (next === current) return;
+
+    // CRITICAL FIX: Save the current tail (including any new messages sent after
+    // the branch point) back into the current branch before switching away.
+    // Without this, messages added after the branch are lost when navigating.
+    const currentTail = chatHistory.slice(msgIndex);
+    setBranches(prev => {
+      const updated = [...(prev[msgIndex] || [])];
+      updated[current] = currentTail;
+      return { ...prev, [msgIndex]: updated };
+    });
+
     setActiveBranch(prev => ({ ...prev, [msgIndex]: next }));
-    // Reconstruct chatHistory: history up to msgIndex + the chosen branch
+    // Reconstruct chatHistory: history before the branch + the chosen branch's tail
     const historyBefore = chatHistory.slice(0, msgIndex);
     const branchSlice = branchList[next];
     setChatHistory([...historyBefore, ...branchSlice]);
