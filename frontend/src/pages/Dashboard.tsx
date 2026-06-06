@@ -9,9 +9,15 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ArrowUp,
+  Copy,
+  Check,
+  Edit2,
+  RotateCcw,
+  Square,
   LogOut,
   Settings,
   User,
+  Star,
   Mic,
   MoreHorizontal,
   Sparkles,
@@ -32,6 +38,8 @@ import {
   Compass,
   Lightbulb,
   Rocket,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import ReactMarkdown from 'react-markdown';
@@ -39,6 +47,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeHighlight from 'rehype-highlight';
+import './Dashboard.css';
 
 import {
   DropdownMenu,
@@ -68,6 +77,7 @@ interface ChatSession {
   history: any[];
   createdAt: number;
   botType?: 'curriculum' | 'specialized';
+  isStarred?: boolean;
 }
 
 const subjectChips = [
@@ -129,6 +139,47 @@ const Dashboard = () => {
   const [allChats, setAllChats] = useState<ChatSession[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [activeBotType, setActiveBotType] = useState<'curriculum' | 'specialized'>('curriculum');
+  const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
+  const [loadingText, setLoadingText] = useState("Thinking...");
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Branch editing state
+  // branches[msgIndex] = array of branch histories, each history = {u, a, ...}[]
+  const [branches, setBranches] = useState<Record<number, any[][]>>({});
+  // activeBranch[msgIndex] = which branch index is currently shown (0-based)
+  const [activeBranch, setActiveBranch] = useState<Record<number, number>>({});
+  // editingIndex = which user message is currently being edited inline
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  // editingText = the textarea content for the inline edit
+  const [editingText, setEditingText] = useState<string>("");
+
+  const formatTime = (ts?: number) => {
+    if (!ts) return '';
+    return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  };
+
+  const loadingStrings = useMemo(() => [
+    "Thinking...",
+    "Analyzing context...",
+    "Drafting response...",
+    "Refining details...",
+    "Searching knowledge base...",
+    "Connecting ideas..."
+  ], []);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isLoading) {
+      setLoadingText(loadingStrings[0]);
+      let i = 0;
+      interval = setInterval(() => {
+        i = (i + 1) % loadingStrings.length;
+        setLoadingText(loadingStrings[i]);
+      }, 3000);
+    }
+    return () => clearInterval(interval);
+  }, [isLoading, loadingStrings]);
 
   const handleBotTypeChange = (type: 'curriculum' | 'specialized') => {
     setActiveBotType(type);
@@ -224,7 +275,7 @@ const Dashboard = () => {
     }));
   }, []);
 
-  const handleSend = async (e?: React.FormEvent, overrideMsg?: string) => {
+  const handleSend = async (e?: React.FormEvent, overrideMsg?: string, overrideHistory?: any[]) => {
     if (e) e.preventDefault();
     const msg = overrideMsg || message;
     if (!msg.trim() || isLoading) return;
@@ -237,10 +288,14 @@ const Dashboard = () => {
       }
     }
 
-    const newUserMsg = { u: msg };
-    const updatedHistory = [...chatHistory, newUserMsg];
+    const currentHistory = overrideHistory || chatHistory;
+    const newUserMsg = { u: msg, timestamp: Date.now() };
+    const updatedHistory = [...currentHistory, newUserMsg];
     setChatHistory(updatedHistory);
     setMessage("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
     setIsLoading(true);
 
     // If it's a new chat, create it with a temporary title while AI responds
@@ -258,11 +313,15 @@ const Dashboard = () => {
       setAllChats(prev => [newChat, ...prev]);
     }
 
+    // Initialize AbortController for cancellation
+    abortControllerRef.current = new AbortController();
+
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userMsg: msg, history: updatedHistory, botType: activeBotType })
+        body: JSON.stringify({ userMsg: msg, history: updatedHistory, botType: activeBotType }),
+        signal: abortControllerRef.current.signal
       });
 
       if (!response.ok) {
@@ -278,7 +337,8 @@ const Dashboard = () => {
         a: data.response,
         snapshot: data.snapshot,
         topic: data.topic,
-        youtube_results: data.youtube_results
+        youtube_results: data.youtube_results,
+        timestamp: newUserMsg.timestamp
       };
 
       setChatHistory(prev => {
@@ -302,6 +362,23 @@ const Dashboard = () => {
       }));
 
     } catch (error: any) {
+      if (error.name === 'AbortError') {
+        // Handle cancellation
+        const cancelMsg = "Generation stopped by user.";
+        setChatHistory(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1].a = cancelMsg;
+          return updated;
+        });
+        setAllChats(prev => prev.map(chat => {
+          if (chat.id === activeId) {
+            const last = { ...chat.history[chat.history.length - 1], a: cancelMsg };
+            return { ...chat, history: [...chat.history.slice(0, -1), last] };
+          }
+          return chat;
+        }));
+        return;
+      }
       console.error("Failed to send message:", error);
       const errorMsg = error.message || "Sorry, I encountered an error. Please check if the AI server is running.";
       setChatHistory(prev => {
@@ -319,6 +396,160 @@ const Dashboard = () => {
       }));
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleCancel = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+  };
+
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(id);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const handleEditMessage = (index: number, msg: string) => {
+    setEditingIndex(index);
+    setEditingText(msg);
+  };
+
+  const handleEditCancel = () => {
+    setEditingIndex(null);
+    setEditingText("");
+  };
+
+  const handleEditSave = async (index: number) => {
+    const newText = editingText.trim();
+    if (!newText) return;
+
+    // Store the current branch at this index before branching
+    setBranches(prev => {
+      const existingBranches = prev[index] || [chatHistory.slice(index)];
+      return { ...prev, [index]: [...existingBranches] };
+    });
+
+    // Close editing UI
+    setEditingIndex(null);
+    setEditingText("");
+
+    // The new branch starts from history up to (not including) this index
+    const historyBeforeEdit = chatHistory.slice(0, index);
+
+    // After API call, update branches so the new branch is the last one
+    // We pass a callback to capture the result into branches
+    await handleSendForBranch(newText, historyBeforeEdit, index);
+  };
+
+  const handleSendForBranch = async (msg: string, historyBefore: any[], branchAtIndex: number) => {
+    if (!msg.trim() || isLoading) return;
+
+    const newUserMsg = { u: msg, timestamp: Date.now() };
+    const updatedHistory = [...historyBefore, newUserMsg];
+    setChatHistory(updatedHistory);
+    setIsLoading(true);
+
+    let activeId = currentChatId;
+    if (!activeId) {
+      activeId = Date.now().toString();
+      setCurrentChatId(activeId);
+      const newChat: ChatSession = {
+        id: activeId,
+        title: "New Chat",
+        history: updatedHistory,
+        createdAt: Date.now(),
+        botType: activeBotType
+      };
+      setAllChats(prev => [newChat, ...prev]);
+    }
+
+    abortControllerRef.current = new AbortController();
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/ai/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userMsg: msg, history: updatedHistory, botType: activeBotType }),
+        signal: abortControllerRef.current.signal
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.details || errorData.error || `Server error ${response.status}`);
+      }
+
+      const data = await response.json();
+      const finalAIResponse = {
+        u: msg,
+        a: data.response,
+        snapshot: data.snapshot,
+        topic: data.topic,
+        youtube_results: data.youtube_results,
+        timestamp: newUserMsg.timestamp
+      };
+
+      setChatHistory(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1] = finalAIResponse;
+
+        // Store this as the latest branch at branchAtIndex
+        setBranches(prevBranches => {
+          const existingBranches = prevBranches[branchAtIndex] || [];
+          const newBranches = [...existingBranches, updated.slice(branchAtIndex)];
+          // Set the active branch to the newest one
+          setActiveBranch(prevActive => ({ ...prevActive, [branchAtIndex]: newBranches.length - 1 }));
+          return { ...prevBranches, [branchAtIndex]: newBranches };
+        });
+
+        return updated;
+      });
+
+      setAllChats(prev => prev.map(chat => {
+        if (chat.id === activeId) {
+          const updatedChat = { ...chat, history: [...chat.history.slice(0, -1), finalAIResponse] };
+          if (data.chatTitle) updatedChat.title = data.chatTitle;
+          return updatedChat;
+        }
+        return chat;
+      }));
+
+    } catch (error: any) {
+      if (error.name === 'AbortError') return;
+      console.error("Branch send error:", error);
+      const errorMsg = error.message || "Sorry, something went wrong.";
+      setChatHistory(prev => {
+        const updated = [...prev];
+        updated[updated.length - 1].a = errorMsg;
+        return updated;
+      });
+    } finally {
+      setIsLoading(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const navigateBranch = (msgIndex: number, direction: 'prev' | 'next') => {
+    const branchList = branches[msgIndex];
+    if (!branchList || branchList.length <= 1) return;
+    const current = activeBranch[msgIndex] ?? branchList.length - 1;
+    const next = direction === 'prev' ? Math.max(0, current - 1) : Math.min(branchList.length - 1, current + 1);
+    setActiveBranch(prev => ({ ...prev, [msgIndex]: next }));
+    // Reconstruct chatHistory: history up to msgIndex + the chosen branch
+    const historyBefore = chatHistory.slice(0, msgIndex);
+    const branchSlice = branchList[next];
+    setChatHistory([...historyBefore, ...branchSlice]);
+  };
+
+  const handleRegenerate = (index: number) => {
+    // Regenerate from the user message at 'index'
+    const targetMsg = chatHistory[index]?.u;
+    if (targetMsg) {
+      const newHistory = chatHistory.slice(0, index);
+      // We don't need to setChatHistory here because handleSend will do it
+      handleSend(undefined, targetMsg, newHistory);
     }
   };
 
@@ -337,12 +568,37 @@ const Dashboard = () => {
     if (isMobile) setSidebarOpen(false);
   };
 
+  // const toggleStarChat = (id: string, e: React.MouseEvent) => {
+  //   e.stopPropagation();
+  //   setAllChats(prev => prev.map(c => c.id === id ? { ...c, isStarred: !c.isStarred } : c));
+  // };
+
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(e.target.value);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend(e);
+    }
+  };
+
   const deleteChat = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setAllChats(prev => prev.filter(c => c.id !== id));
     if (currentChatId === id) {
       startNewChat();
     }
+  };
+
+  const toggleStarChat = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAllChats(prev => prev.map(c => c.id === id ? { ...c, isStarred: !c.isStarred } : c));
   };
 
   // Auto-scroll to bottom
@@ -355,11 +611,11 @@ const Dashboard = () => {
 
   // Homepage-aligned surface utilities
   const surfaceCard = "bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-border";
+  const flushSidebar = "bg-white border-r border-border";
   const surfaceItem =
     "bg-white border border-border hover:border-primary/30 hover:bg-muted/20 transition-all";
   const iconBtn =
     "p-2 rounded-xl bg-white border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all";
-
 
   return (
     <div className="dashboard-shell h-screen flex bg-background text-foreground relative overflow-hidden">
@@ -415,7 +671,7 @@ const Dashboard = () => {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 32 }}
-            className={`fixed lg:relative z-40 w-[270px] h-[calc(100vh-1.5rem)] flex flex-col m-3 rounded-3xl ${surfaceCard}`}
+            className={`fixed lg:relative z-40 w-[270px] h-screen flex flex-col ${flushSidebar}`}
           >
             {/* Brand */}
             <div className="flex items-center justify-between px-4 h-14 shrink-0">
@@ -451,18 +707,67 @@ const Dashboard = () => {
               </button>
             </div>
 
-            {/* Recent */}
+            {/* Chat Lists */}
             <div className="flex-1 px-3 mt-5 overflow-y-auto chat-scrollbar min-h-0">
+
+              {/* Starred */}
+              {allChats.filter(c => c.isStarred).length > 0 && (
+                <div className="mb-4">
+                  <div className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground px-3 mb-2 flex items-center gap-1.5">
+                    <Star size={12} className="fill-amber-500 text-amber-500" /> Starred
+                  </div>
+                  <ul className="space-y-1">
+                    {allChats.filter(c => c.isStarred).map((chat) => (
+                      <li key={chat.id}>
+                        <div
+                          onClick={() => loadChat(chat)}
+                          className={`group w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer ${currentChatId === chat.id
+                            ? "bg-muted text-foreground"
+                            : "text-foreground/90 hover:text-foreground hover:bg-muted/60"
+                            }`}
+                        >
+                          <div className="flex flex-col flex-1 min-w-0 mr-2 text-left">
+                            <span className="truncate">{chat.title}</span>
+                            <span className="text-[10px] text-muted-foreground/75 font-normal tracking-tight">
+                              {chat.botType === 'specialized' ? '⚡ Specialized Planner' : '🎓 Curriculum Tutor'}
+                            </span>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                onClick={(e) => e.stopPropagation()}
+                                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-muted rounded-md transition-all"
+                              >
+                                <MoreHorizontal size={14} className="text-muted-foreground" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40 rounded-xl">
+                              <DropdownMenuItem onClick={(e) => toggleStarChat(chat.id, e as any)}>
+                                <Star size={14} className="mr-2 fill-amber-500 text-amber-500" /> Unstar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={(e) => deleteChat(chat.id, e as any)}>
+                                Delete Chat
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Recent */}
               <div className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground px-3 mb-2">
                 Recent
               </div>
-              <ul className="space-y-1">
-                {allChats.length === 0 ? (
+              <ul className="space-y-1 pb-4">
+                {allChats.filter(c => !c.isStarred).length === 0 ? (
                   <div className="px-3 py-8 text-center">
                     <p className="text-xs text-muted-foreground">No recent chats</p>
                   </div>
                 ) : (
-                  allChats.map((chat) => (
+                  allChats.filter(c => !c.isStarred).map((chat) => (
                     <li key={chat.id}>
                       <div
                         onClick={() => loadChat(chat)}
@@ -487,7 +792,10 @@ const Dashboard = () => {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-40 rounded-xl">
-                            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={(e) => deleteChat(chat.id, e)}>
+                            <DropdownMenuItem onClick={(e) => toggleStarChat(chat.id, e as any)}>
+                              <Star size={14} className="mr-2" /> Star Chat
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10" onClick={(e) => deleteChat(chat.id, e as any)}>
                               Delete Chat
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -650,10 +958,76 @@ const Dashboard = () => {
                   {chatHistory.map((chat, idx) => (
                     <div key={idx} className="space-y-6">
                       {/* User Message */}
-                      <div className="flex justify-end">
-                        <div className="max-w-[80%] px-4 py-3 rounded-2xl bg-muted text-foreground text-sm shadow-sm">
-                          {chat.u}
-                        </div>
+                      <div className="flex flex-col items-end gap-2 group">
+                        {editingIndex === idx ? (
+                          /* ── Inline Edit UI ── */
+                          <div className="w-full max-w-[85%] flex flex-col gap-2">
+                            <textarea
+                              value={editingText}
+                              onChange={e => setEditingText(e.target.value)}
+                              rows={Math.max(2, editingText.split('\n').length)}
+                              className="w-full px-4 py-3 rounded-2xl bg-muted text-foreground text-sm shadow-sm outline-none resize-none border border-primary/30 focus:border-primary transition-colors"
+                              autoFocus
+                            />
+                            <div className="flex items-center justify-between px-1">
+                              <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                                Editing will create a new conversation branch. You can switch between branches using the arrow navigation buttons.
+                              </span>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <button
+                                  onClick={handleEditCancel}
+                                  className="px-3 py-1.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                                >Cancel</button>
+                                <button
+                                  onClick={() => handleEditSave(idx)}
+                                  disabled={!editingText.trim()}
+                                  className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                >Save</button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          /* ── Normal User Bubble ── */
+                          <>
+                            <div className="max-w-[80%] px-4 py-3 rounded-2xl bg-muted text-foreground text-sm shadow-sm">
+                              {chat.u}
+                            </div>
+                            {/* Action bar — visible on hover */}
+                            <div className="flex items-center gap-2 px-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                              {chat.timestamp && <span className="text-[10px] mr-1 font-medium">{formatTime(chat.timestamp)}</span>}
+                              <button onClick={() => handleCopy(chat.u, `u-${idx}`)} className="p-1 hover:text-foreground transition-colors flex items-center gap-1 text-[11px] font-medium uppercase tracking-wider" title="Copy message">
+                                {copiedIndex === `u-${idx}` ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />} Copy
+                              </button>
+                              <button onClick={() => handleEditMessage(idx, chat.u)} className="p-1 hover:text-foreground transition-colors flex items-center gap-1 text-[11px] font-medium uppercase tracking-wider" title="Edit message">
+                                <Edit2 size={12} /> Edit
+                              </button>
+                              <button onClick={() => handleRegenerate(idx)} className="p-1 hover:text-foreground transition-colors flex items-center gap-1 text-[11px] font-medium uppercase tracking-wider" title="Regenerate from here">
+                                <RotateCcw size={12} /> Retry
+                              </button>
+                            </div>
+                            {/* Branch Navigator — only if multiple branches exist */}
+                            {branches[idx] && branches[idx].length > 1 && (
+                              <div className="flex items-center gap-1 px-1 text-muted-foreground">
+                                <button
+                                  onClick={() => navigateBranch(idx, 'prev')}
+                                  disabled={(activeBranch[idx] ?? branches[idx].length - 1) === 0}
+                                  className="p-0.5 rounded hover:text-foreground disabled:opacity-30 transition-colors"
+                                  aria-label="Previous version"
+                                ><ChevronLeft size={14} /></button>
+                                <span className="text-[11px] font-medium tabular-nums">
+                                  {(activeBranch[idx] ?? branches[idx].length - 1) + 1} / {branches[idx].length}
+                                </span>
+                                <button
+                                  onClick={() => navigateBranch(idx, 'next')}
+                                  disabled={(activeBranch[idx] ?? branches[idx].length - 1) === branches[idx].length - 1}
+                                  className="p-0.5 rounded hover:text-foreground disabled:opacity-30 transition-colors"
+                                  aria-label="Next version"
+                                ><ChevronRight size={14} /></button>
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
 
                       {/* AI Response */}
@@ -663,13 +1037,24 @@ const Dashboard = () => {
                             <Sparkles size={16} className="text-white" />
                           </div>
                           <div className="flex-1 space-y-4">
-                            <div className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed markdown-content">
+                            <div className="prose dark:prose-invert max-w-none text-foreground leading-relaxed ai-markdown-content">
                               <ReactMarkdown
                                 remarkPlugins={[remarkGfm, remarkMath]}
                                 rehypePlugins={[rehypeKatex, rehypeHighlight]}
                               >
                                 {chat.a}
                               </ReactMarkdown>
+                            </div>
+
+                            {/* Message Actions */}
+                            <div className="flex items-center gap-2 pt-2 mt-2 text-muted-foreground border-t border-border/40">
+                              {chat.timestamp && <span className="text-[10px] mr-auto font-medium">{formatTime(chat.timestamp)}</span>}
+                              <button onClick={() => handleCopy(chat.a, `a-${idx}`)} className="p-1.5 hover:text-foreground hover:bg-muted/50 rounded-md transition-colors flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider" title="Copy response">
+                                {copiedIndex === `a-${idx}` ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />} {copiedIndex === `a-${idx}` ? 'Copied' : 'Copy'}
+                              </button>
+                              <button onClick={() => handleRegenerate(idx)} className="p-1.5 hover:text-foreground hover:bg-muted/50 rounded-md transition-colors flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider" title="Regenerate response">
+                                <RotateCcw size={14} /> Retry
+                              </button>
                             </div>
 
                             {/* YouTube Results */}
@@ -700,13 +1085,16 @@ const Dashboard = () => {
                         </div>
                       ) : (
                         <div className="flex justify-start gap-4">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cta to-amber-400 flex items-center justify-center shrink-0 animate-pulse">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cta to-amber-400 flex items-center justify-center shrink-0 animate-pulse shadow-sm">
                             <Sparkles size={16} className="text-white" />
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0ms' }} />
-                            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '150ms' }} />
-                            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '300ms' }} />
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0ms' }} />
+                              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '150ms' }} />
+                              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
+                            <span className="text-xs text-muted-foreground font-medium animate-pulse">{loadingText}</span>
                           </div>
                         </div>
                       )}
@@ -757,52 +1145,7 @@ const Dashboard = () => {
               </motion.div>
             )}
 
-            {/* Chatbot Mode Selector - Animated segmented switch */}
-            {/* <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-              className="flex justify-center mb-4"
-            >
-              <div className="inline-flex p-1 bg-white/60 dark:bg-card/60 backdrop-blur-md border border-border/50 rounded-2xl shadow-sm relative z-20">
-                <button
-                  type="button"
-                  onClick={() => handleBotTypeChange('curriculum')}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all relative ${activeBotType === 'curriculum'
-                    ? 'text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                >
-                  {activeBotType === 'curriculum' && (
-                    <motion.div
-                      layoutId="active-bot-pill"
-                      className="absolute inset-0 bg-white dark:bg-background rounded-lg shadow-sm -z-10 border border-primary/10"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                  <GraduationCap size={15} className={activeBotType === 'curriculum' ? 'text-primary animate-pulse' : ''} />
-                  <span>Curriculum AI Tutor</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleBotTypeChange('specialized')}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all relative ${activeBotType === 'specialized'
-                    ? 'text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                >
-                  {activeBotType === 'specialized' && (
-                    <motion.div
-                      layoutId="active-bot-pill"
-                      className="absolute inset-0 bg-white dark:bg-background rounded-lg shadow-sm -z-10 border border-primary/10"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                  <Sparkles size={15} className={activeBotType === 'specialized' ? 'text-primary animate-pulse' : ''} />
-                  <span>Specialized Syllabus Planner</span>
-                </button>
-              </div>
-            </motion.div> */}
+
 
             {/* Composer pill - lively neumorphism */}
             <motion.form
@@ -812,18 +1155,21 @@ const Dashboard = () => {
               transition={{ delay: 0.4, duration: 0.5 }}
               className="w-full"
             >
-              <div className={`relative flex items-center rounded-3xl sm:rounded-full p-2 pl-4 pr-2 ${surfaceCard}`}>
-                <div className="relative flex-1">
-                  <input
-                    type="text"
+              <div className={`relative flex items-end rounded-3xl sm:rounded-[2rem] p-2 pl-4 pr-2 ${surfaceCard}`}>
+                <div className="relative flex-1 pb-1 flex flex-col justify-center min-h-[40px]">
+                  <textarea
+                    ref={textareaRef}
                     value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+                    onChange={handleInput}
+                    onKeyDown={handleKeyDown}
                     placeholder=""
+                    rows={1}
                     aria-label="Ask Gruhap anything"
-                    className="w-full bg-transparent outline-none text-base py-2 text-foreground relative z-10"
+                    className="w-full bg-transparent outline-none text-base py-1.5 text-foreground relative z-10 resize-none max-h-[200px] overflow-y-auto chat-scrollbar"
+                    style={{ minHeight: '36px' }}
                   />
                   {!message && (
-                    <div className="pointer-events-none absolute inset-0 flex items-center overflow-hidden">
+                    <div className="pointer-events-none absolute inset-0 flex items-center overflow-hidden pb-1">
                       <span className="text-base text-muted-foreground truncate w-full flex items-center">
                         {displayText}
                         <motion.span
@@ -836,17 +1182,56 @@ const Dashboard = () => {
                   )}
                 </div>
 
-                <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                  <motion.button
-                    whileHover={{ scale: 1.06 }}
-                    whileTap={{ scale: 0.94 }}
-                    type="submit"
-                    disabled={!message.trim()}
-                    className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed shadow-md hover-glow hover:bg-primary/90 transition-all"
-                    aria-label="Send"
-                  >
-                    <ArrowUp size={18} strokeWidth={2.5} />
-                  </motion.button>
+                <div className="flex items-center gap-1.5 shrink-0 ml-2 pb-0.5">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="w-10 h-10 rounded-full bg-muted text-muted-foreground flex items-center justify-center shadow-md hover:bg-muted/80 transition-all"
+                        aria-label="Select Bot Type"
+                      >
+                        {activeBotType === 'curriculum' ? <GraduationCap size={18} /> : <Sparkles size={18} />}
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 rounded-2xl">
+                      <DropdownMenuItem
+                        onClick={() => handleBotTypeChange('curriculum')}
+                        className={activeBotType === 'curriculum' ? 'bg-primary/10 text-primary focus:bg-primary/20 focus:text-primary font-medium' : ''}
+                      >
+                        <GraduationCap className="mr-2 h-4 w-4" /> Curriculum AI Tutor
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleBotTypeChange('specialized')}
+                        className={activeBotType === 'specialized' ? 'bg-primary/10 text-primary focus:bg-primary/20 focus:text-primary font-medium' : ''}
+                      >
+                        <Sparkles className="mr-2 h-4 w-4" /> Specialized Planner
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {isLoading ? (
+                    <motion.button
+                      whileHover={{ scale: 1.06 }}
+                      whileTap={{ scale: 0.94 }}
+                      type="button"
+                      onClick={handleCancel}
+                      className="w-10 h-10 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md hover-glow hover:bg-destructive/90 transition-all"
+                      aria-label="Stop Generating"
+                    >
+                      <Square size={16} fill="currentColor" />
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      whileHover={{ scale: 1.06 }}
+                      whileTap={{ scale: 0.94 }}
+                      type="submit"
+                      disabled={!message.trim()}
+                      className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed shadow-md hover-glow hover:bg-primary/90 transition-all"
+                      aria-label="Send"
+                    >
+                      <ArrowUp size={18} strokeWidth={2.5} />
+                    </motion.button>
+                  )}
                 </div>
               </div>
             </motion.form>
