@@ -125,6 +125,15 @@ const rotatingPrompts = [
   "Explain Newton's third law with a real example…",
 ];
 
+const formatLatexEquations = (text: string) => {
+  if (!text) return "";
+  return text
+    .replace(/\\\[/g, '$$$$')
+    .replace(/\\\]/g, '$$$$')
+    .replace(/\\\(/g, '$')
+    .replace(/\\\)/g, '$');
+};
+
 const Dashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -1054,7 +1063,7 @@ const Dashboard = () => {
                                 remarkPlugins={[remarkGfm, remarkMath]}
                                 rehypePlugins={[rehypeKatex, rehypeHighlight]}
                               >
-                                {chat.a}
+                                {formatLatexEquations(chat.a)}
                               </ReactMarkdown>
                             </div>
 
