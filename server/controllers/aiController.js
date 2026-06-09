@@ -511,9 +511,18 @@ const curriculumReply = async (req, res) => {
             titlePromise
         ]);
 
+        const safeResponse = (() => {
+            const resp = data.response;
+            if (typeof resp === 'object' && resp !== null) {
+                if (Array.isArray(resp)) return resp.map(item => String(item)).join('\n\n');
+                return Object.entries(resp).map(([k, v]) => `**${k}**: ${v}`).join('\n\n');
+            }
+            return resp ? String(resp) : "";
+        })();
+
         const responseData = {
             ...data,
-            response: data.response,
+            response: safeResponse,
             snapshot: data.memory_snapshot,
             topic: data.current_topic || data.subject,
             youtube_results: ytResults,
